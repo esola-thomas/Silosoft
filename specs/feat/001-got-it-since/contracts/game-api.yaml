@@ -1,0 +1,357 @@
+openapi: 3.0.3
+info:
+  title: Silosoft Card Game API
+  description: REST API for cooperative workplace card game
+  version: 1.0.0
+  contact:
+    name: Silosoft Team
+    email: dev@silosoft.com
+
+servers:
+  - url: http://localhost:3001/api/v1
+    description: Development server
+
+paths:
+  /games:
+    post:
+      summary: Create new game session
+      description: Initialize a new game with 2-4 players
+      operationId: createGame
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playerNames:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 2
+                  maxItems: 4
+                  example: ["Alice", "Bob", "Charlie"]
+      responses:
+        '201':
+          description: Game created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameState'
+        '400':
+          description: Invalid player configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /games/{gameId}:
+    get:
+      summary: Get current game state
+      description: Retrieve complete game state including all cards and players
+      operationId: getGameState
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current game state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameState'
+        '404':
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /games/{gameId}/actions/draw:
+    post:
+      summary: Draw a card
+      description: Player draws one card from deck on their turn
+      operationId: drawCard
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playerId:
+                  type: string
+                  example: "player-uuid"
+      responses:
+        '200':
+          description: Card drawn successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  card:
+                    $ref: '#/components/schemas/Card'
+                  gameState:
+                    $ref: '#/components/schemas/GameState'
+        '400':
+          description: Invalid action (not player's turn, empty deck)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /games/{gameId}/actions/assign:
+    post:
+      summary: Assign resource to feature
+      description: Assign a resource card to a feature card
+      operationId: assignResource
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playerId:
+                  type: string
+                resourceId:
+                  type: string
+                featureId:
+                  type: string
+              required: [playerId, resourceId, featureId]
+      responses:
+        '200':
+          description: Resource assigned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  featureCompleted:
+                    type: boolean
+                  pointsAwarded:
+                    type: number
+                  gameState:
+                    $ref: '#/components/schemas/GameState'
+        '400':
+          description: Invalid assignment (resource unavailable, wrong type)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /games/{gameId}/actions/end-turn:
+    post:
+      summary: End current player's turn
+      description: Advance to next player's turn
+      operationId: endTurn
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playerId:
+                  type: string
+      responses:
+        '200':
+          description: Turn ended successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameState'
+        '400':
+          description: Invalid turn end (not current player)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    GameState:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "game-uuid"
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/Player'
+        currentRound:
+          type: integer
+          minimum: 1
+          maximum: 10
+          example: 3
+        currentPlayerIndex:
+          type: integer
+          minimum: 0
+          example: 1
+        deck:
+          type: array
+          items:
+            $ref: '#/components/schemas/Card'
+        featuresInPlay:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureCard'
+        gamePhase:
+          type: string
+          enum: [setup, playing, ended]
+          example: "playing"
+        winCondition:
+          type: boolean
+          example: false
+
+    Player:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "player-uuid"
+        name:
+          type: string
+          example: "Alice"
+        hand:
+          type: array
+          items:
+            $ref: '#/components/schemas/Card'
+        score:
+          type: integer
+          example: 12
+        temporarilyUnavailable:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceCard'
+
+    Card:
+      oneOf:
+        - $ref: '#/components/schemas/FeatureCard'
+        - $ref: '#/components/schemas/ResourceCard'
+        - $ref: '#/components/schemas/EventCard'
+      discriminator:
+        propertyName: cardType
+
+    FeatureCard:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "f1"
+        cardType:
+          type: string
+          enum: [feature]
+        name:
+          type: string
+          example: "User Authentication"
+        requirements:
+          type: object
+          properties:
+            dev:
+              type: integer
+              minimum: 0
+            pm:
+              type: integer
+              minimum: 0
+            ux:
+              type: integer
+              minimum: 0
+          example: {"dev": 2, "pm": 1, "ux": 1}
+        points:
+          type: integer
+          enum: [3, 5, 8]
+          example: 5
+        assignedResources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceCard'
+        completed:
+          type: boolean
+          example: false
+
+    ResourceCard:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "r1"
+        cardType:
+          type: string
+          enum: [resource]
+        role:
+          type: string
+          enum: [dev, pm, ux]
+          example: "dev"
+        level:
+          type: string
+          enum: [entry, junior, senior]
+          example: "senior"
+        value:
+          type: integer
+          enum: [1, 2, 3]
+          example: 3
+        assignedTo:
+          type: string
+          nullable: true
+          example: "f1"
+        unavailableUntil:
+          type: integer
+          nullable: true
+          example: 5
+
+    EventCard:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "e1"
+        cardType:
+          type: string
+          enum: [event]
+        type:
+          type: string
+          enum: [layoff, reorg, contractor, competition, pto]
+          example: "layoff"
+        effect:
+          type: string
+          example: "Discard one random resource card"
+        parameters:
+          type: object
+          example: {"count": 1}
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Invalid action"
+        message:
+          type: string
+          example: "Cannot assign resource: not your turn"
+        code:
+          type: string
+          example: "INVALID_TURN"
