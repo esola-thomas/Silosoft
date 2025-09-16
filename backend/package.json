@@ -1,0 +1,60 @@
+{
+  "name": "@silosoft/backend",
+  "version": "1.0.0",
+  "description": "Silosoft Digital Cooperative Card Game - Backend API",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "jest --coverage",
+    "test:contract": "jest tests/contract --coverage",
+    "test:integration": "jest tests/integration --coverage",
+    "test:unit": "jest tests/unit --coverage",
+    "test:performance": "jest tests/performance --coverage",
+    "test:watch": "jest --watch",
+    "lint": "eslint src tests",
+    "lint:fix": "eslint src tests --fix",
+    "format": "prettier --write \"src/**/*.js\" \"tests/**/*.js\"",
+    "format:check": "prettier --check \"src/**/*.js\" \"tests/**/*.js\""
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "express-validator": "^7.0.1",
+    "ajv": "^8.12.0",
+    "winston": "^3.11.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "nodemon": "^3.0.2",
+    "eslint": "^8.55.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-jest": "^27.6.0",
+    "prettier": "^3.1.1",
+    "@types/jest": "^29.5.10"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/app.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    },
+    "testMatch": [
+      "**/tests/**/*.js"
+    ],
+    "verbose": true
+  }
+}

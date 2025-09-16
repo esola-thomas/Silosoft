@@ -1,0 +1,510 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "totalCards": 50,
+    "deckComposition": {
+      "features": 15,
+      "resources": 27,
+      "events": 8
+    }
+  },
+  "cards": {
+    "features": [
+      {
+        "id": "f01",
+        "name": "User Login",
+        "description": "Basic authentication system",
+        "requirements": {
+          "dev": 2,
+          "pm": 1,
+          "ux": 0
+        },
+        "points": 3,
+        "complexity": "basic"
+      },
+      {
+        "id": "f02",
+        "name": "User Registration",
+        "description": "New user signup flow",
+        "requirements": {
+          "dev": 2,
+          "pm": 1,
+          "ux": 1
+        },
+        "points": 3,
+        "complexity": "basic"
+      },
+      {
+        "id": "f03",
+        "name": "Password Reset",
+        "description": "Email-based password recovery",
+        "requirements": {
+          "dev": 2,
+          "pm": 1,
+          "ux": 1
+        },
+        "points": 3,
+        "complexity": "basic"
+      },
+      {
+        "id": "f04",
+        "name": "Dashboard",
+        "description": "User overview and metrics",
+        "requirements": {
+          "dev": 3,
+          "pm": 2,
+          "ux": 2
+        },
+        "points": 5,
+        "complexity": "complex"
+      },
+      {
+        "id": "f05",
+        "name": "Search Functionality",
+        "description": "Full-text search with filters",
+        "requirements": {
+          "dev": 3,
+          "pm": 1,
+          "ux": 2
+        },
+        "points": 5,
+        "complexity": "complex"
+      },
+      {
+        "id": "f06",
+        "name": "Notifications System",
+        "description": "Real-time alerts and messages",
+        "requirements": {
+          "dev": 3,
+          "pm": 2,
+          "ux": 1
+        },
+        "points": 5,
+        "complexity": "complex"
+      },
+      {
+        "id": "f07",
+        "name": "Data Export",
+        "description": "CSV and PDF report generation",
+        "requirements": {
+          "dev": 2,
+          "pm": 1,
+          "ux": 0
+        },
+        "points": 3,
+        "complexity": "basic"
+      },
+      {
+        "id": "f08",
+        "name": "API Integration",
+        "description": "Third-party service connection",
+        "requirements": {
+          "dev": 4,
+          "pm": 2,
+          "ux": 1
+        },
+        "points": 5,
+        "complexity": "complex"
+      },
+      {
+        "id": "f09",
+        "name": "Mobile App",
+        "description": "Cross-platform mobile application",
+        "requirements": {
+          "dev": 5,
+          "pm": 3,
+          "ux": 3
+        },
+        "points": 8,
+        "complexity": "epic"
+      },
+      {
+        "id": "f10",
+        "name": "Analytics Platform",
+        "description": "User behavior tracking and insights",
+        "requirements": {
+          "dev": 4,
+          "pm": 3,
+          "ux": 2
+        },
+        "points": 8,
+        "complexity": "epic"
+      },
+      {
+        "id": "f11",
+        "name": "Payment System",
+        "description": "Subscription and billing management",
+        "requirements": {
+          "dev": 4,
+          "pm": 3,
+          "ux": 2
+        },
+        "points": 8,
+        "complexity": "epic"
+      },
+      {
+        "id": "f12",
+        "name": "User Profile",
+        "description": "Personal information and settings",
+        "requirements": {
+          "dev": 2,
+          "pm": 1,
+          "ux": 2
+        },
+        "points": 3,
+        "complexity": "basic"
+      },
+      {
+        "id": "f13",
+        "name": "File Upload",
+        "description": "Document and image management",
+        "requirements": {
+          "dev": 2,
+          "pm": 1,
+          "ux": 1
+        },
+        "points": 3,
+        "complexity": "basic"
+      },
+      {
+        "id": "f14",
+        "name": "Chat System",
+        "description": "Real-time messaging platform",
+        "requirements": {
+          "dev": 4,
+          "pm": 2,
+          "ux": 2
+        },
+        "points": 5,
+        "complexity": "complex"
+      },
+      {
+        "id": "f15",
+        "name": "Admin Panel",
+        "description": "System management interface",
+        "requirements": {
+          "dev": 3,
+          "pm": 2,
+          "ux": 2
+        },
+        "points": 5,
+        "complexity": "complex"
+      }
+    ],
+    "resources": [
+      {
+        "id": "r01",
+        "role": "dev",
+        "level": "entry",
+        "value": 1,
+        "name": "Junior Developer",
+        "color": "#4FC3F7"
+      },
+      {
+        "id": "r02",
+        "role": "dev",
+        "level": "entry",
+        "value": 1,
+        "name": "Junior Developer",
+        "color": "#4FC3F7"
+      },
+      {
+        "id": "r03",
+        "role": "dev",
+        "level": "entry",
+        "value": 1,
+        "name": "Junior Developer",
+        "color": "#4FC3F7"
+      },
+      {
+        "id": "r04",
+        "role": "dev",
+        "level": "junior",
+        "value": 2,
+        "name": "Mid-level Developer",
+        "color": "#29B6F6"
+      },
+      {
+        "id": "r05",
+        "role": "dev",
+        "level": "junior",
+        "value": 2,
+        "name": "Mid-level Developer",
+        "color": "#29B6F6"
+      },
+      {
+        "id": "r06",
+        "role": "dev",
+        "level": "junior",
+        "value": 2,
+        "name": "Mid-level Developer",
+        "color": "#29B6F6"
+      },
+      {
+        "id": "r07",
+        "role": "dev",
+        "level": "senior",
+        "value": 3,
+        "name": "Senior Developer",
+        "color": "#0288D1"
+      },
+      {
+        "id": "r08",
+        "role": "dev",
+        "level": "senior",
+        "value": 3,
+        "name": "Senior Developer",
+        "color": "#0288D1"
+      },
+      {
+        "id": "r09",
+        "role": "dev",
+        "level": "senior",
+        "value": 3,
+        "name": "Senior Developer",
+        "color": "#0288D1"
+      },
+      {
+        "id": "r10",
+        "role": "pm",
+        "level": "entry",
+        "value": 1,
+        "name": "Associate PM",
+        "color": "#9575CD"
+      },
+      {
+        "id": "r11",
+        "role": "pm",
+        "level": "entry",
+        "value": 1,
+        "name": "Associate PM",
+        "color": "#9575CD"
+      },
+      {
+        "id": "r12",
+        "role": "pm",
+        "level": "entry",
+        "value": 1,
+        "name": "Associate PM",
+        "color": "#9575CD"
+      },
+      {
+        "id": "r13",
+        "role": "pm",
+        "level": "junior",
+        "value": 2,
+        "name": "Product Manager",
+        "color": "#7E57C2"
+      },
+      {
+        "id": "r14",
+        "role": "pm",
+        "level": "junior",
+        "value": 2,
+        "name": "Product Manager",
+        "color": "#7E57C2"
+      },
+      {
+        "id": "r15",
+        "role": "pm",
+        "level": "junior",
+        "value": 2,
+        "name": "Product Manager",
+        "color": "#7E57C2"
+      },
+      {
+        "id": "r16",
+        "role": "pm",
+        "level": "senior",
+        "value": 3,
+        "name": "Senior PM",
+        "color": "#5E35B1"
+      },
+      {
+        "id": "r17",
+        "role": "pm",
+        "level": "senior",
+        "value": 3,
+        "name": "Senior PM",
+        "color": "#5E35B1"
+      },
+      {
+        "id": "r18",
+        "role": "pm",
+        "level": "senior",
+        "value": 3,
+        "name": "Senior PM",
+        "color": "#5E35B1"
+      },
+      {
+        "id": "r19",
+        "role": "ux",
+        "level": "entry",
+        "value": 1,
+        "name": "UX Intern",
+        "color": "#4DB6AC"
+      },
+      {
+        "id": "r20",
+        "role": "ux",
+        "level": "entry",
+        "value": 1,
+        "name": "UX Intern",
+        "color": "#4DB6AC"
+      },
+      {
+        "id": "r21",
+        "role": "ux",
+        "level": "entry",
+        "value": 1,
+        "name": "UX Intern",
+        "color": "#4DB6AC"
+      },
+      {
+        "id": "r22",
+        "role": "ux",
+        "level": "junior",
+        "value": 2,
+        "name": "UX Designer",
+        "color": "#26A69A"
+      },
+      {
+        "id": "r23",
+        "role": "ux",
+        "level": "junior",
+        "value": 2,
+        "name": "UX Designer",
+        "color": "#26A69A"
+      },
+      {
+        "id": "r24",
+        "role": "ux",
+        "level": "junior",
+        "value": 2,
+        "name": "UX Designer",
+        "color": "#26A69A"
+      },
+      {
+        "id": "r25",
+        "role": "ux",
+        "level": "senior",
+        "value": 3,
+        "name": "Senior UX Designer",
+        "color": "#00897B"
+      },
+      {
+        "id": "r26",
+        "role": "ux",
+        "level": "senior",
+        "value": 3,
+        "name": "Senior UX Designer",
+        "color": "#00897B"
+      },
+      {
+        "id": "r27",
+        "role": "ux",
+        "level": "senior",
+        "value": 3,
+        "name": "Senior UX Designer",
+        "color": "#00897B"
+      }
+    ],
+    "events": [
+      {
+        "id": "e01",
+        "type": "layoff",
+        "name": "Budget Cuts",
+        "description": "Randomly discard 2 resource cards",
+        "effect": {
+          "action": "random_discard",
+          "count": 2
+        },
+        "color": "#EF5350"
+      },
+      {
+        "id": "e02",
+        "type": "pto",
+        "name": "Vacation Time",
+        "description": "Choose a resource to be unavailable for 2 rounds",
+        "effect": {
+          "action": "resource_lock",
+          "duration": 2,
+          "playerChoice": true
+        },
+        "color": "#FFA726"
+      },
+      {
+        "id": "e03",
+        "type": "plm",
+        "name": "Parental Leave",
+        "description": "Choose a resource to be unavailable for 2 rounds",
+        "effect": {
+          "action": "resource_lock",
+          "duration": 2,
+          "playerChoice": true
+        },
+        "color": "#FFCA28"
+      },
+      {
+        "id": "e04",
+        "type": "competition",
+        "name": "Market Competition",
+        "description": "Complete a feature in 1.5 rounds or lose 3 points",
+        "effect": {
+          "action": "deadline_pressure",
+          "rounds": 1.5,
+          "successBonus": 2,
+          "failurePenalty": -3
+        },
+        "color": "#AB47BC"
+      },
+      {
+        "id": "e05",
+        "type": "layoff",
+        "name": "Restructuring",
+        "description": "Randomly discard 1 resource card",
+        "effect": {
+          "action": "random_discard",
+          "count": 1
+        },
+        "color": "#EF5350"
+      },
+      {
+        "id": "e06",
+        "type": "pto",
+        "name": "Sick Leave",
+        "description": "Choose a resource to be unavailable for 2 rounds",
+        "effect": {
+          "action": "resource_lock",
+          "duration": 2,
+          "playerChoice": true
+        },
+        "color": "#FFA726"
+      },
+      {
+        "id": "e07",
+        "type": "competition",
+        "name": "Client Deadline",
+        "description": "Complete a feature in 1.5 rounds or lose 3 points",
+        "effect": {
+          "action": "deadline_pressure",
+          "rounds": 1.5,
+          "successBonus": 2,
+          "failurePenalty": -3
+        },
+        "color": "#AB47BC"
+      },
+      {
+        "id": "e08",
+        "type": "bonus",
+        "name": "Team Bonus",
+        "description": "Draw 2 extra resource cards",
+        "effect": {
+          "action": "draw_resources",
+          "count": 2
+        },
+        "color": "#66BB6A"
+      }
+    ]
+  }
+}
