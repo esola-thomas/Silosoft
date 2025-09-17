@@ -26,30 +26,34 @@ router.post('/:gameId/actions/draw', async (req, res) => {
     const gameState = gameEngine.getGame(gameId);
 
     res.status(200).json({
-      success: true,
       card: {
-        ...drawnCard,
-        cardType: drawnCard.requirements ? 'feature' : drawnCard.role ? 'resource' : 'event'
-      },
-      drawnCard: {
         ...drawnCard,
         cardType: drawnCard.requirements ? 'feature' : drawnCard.role ? 'resource' : 'event'
       },
       gameState: {
         id: gameState.id,
+        players: gameState.players.map(player => ({
+          id: player.id,
+          name: player.name,
+          hand: player.hand.map(card => ({
+            ...card,
+            cardType: card.requirements ? 'feature' : card.role ? 'resource' : 'event'
+          })),
+          score: player.score,
+          temporarilyUnavailable: player.temporarilyUnavailable
+        })),
         currentRound: gameState.currentRound,
         currentPlayerIndex: gameState.currentPlayerIndex,
-        currentPlayer: gameState.getCurrentPlayer(),
-        deckSize: gameState.deck.length,
-        lastAction: gameState.lastAction
-      },
-      player: {
-        id: playerId,
-        hand: gameState.getPlayerById(playerId).hand.map(card => ({
+        deck: gameState.deck.map(card => ({
           ...card,
           cardType: card.requirements ? 'feature' : card.role ? 'resource' : 'event'
         })),
-        handSize: gameState.getPlayerById(playerId).hand.length
+        featuresInPlay: gameState.featuresInPlay.map(card => ({
+          ...card,
+          cardType: 'feature'
+        })),
+        gamePhase: gameState.gamePhase,
+        winCondition: gameState.winCondition
       }
     });
 
@@ -61,13 +65,17 @@ router.post('/:gameId/actions/draw', async (req, res) => {
         error: 'Not Found',
         message: error.message
       });
-    } else if (error.message.includes("It's not") ||
+    } else if (error.message.includes("Not your turn") ||
                error.message.includes('Game is over') ||
                error.message.includes('Deck is empty') ||
                error.message.includes('hand is full')) {
       res.status(400).json({
         error: 'Bad Request',
-        message: error.message
+        message: error.message,
+        code: error.message.includes("Not your turn") ? 'INVALID_TURN' :
+              error.message.includes('Game is over') ? 'GAME_OVER' :
+              error.message.includes('Deck is empty') ? 'EMPTY_DECK' :
+              error.message.includes('hand is full') ? 'HAND_FULL' : 'BAD_REQUEST'
       });
     } else {
       res.status(500).json({

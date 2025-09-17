@@ -59,10 +59,6 @@ class GameEngine {
   drawCard(gameId, playerId) {
     const gameState = this.getGame(gameId);
 
-    if (gameState.isGameOver()) {
-      throw new Error('Game is over');
-    }
-
     const currentPlayer = gameState.getCurrentPlayer();
     if (currentPlayer.id !== playerId) {
       throw new Error(`Not your turn`);
@@ -70,6 +66,10 @@ class GameEngine {
 
     if (gameState.deck.length === 0) {
       throw new Error('Deck is empty');
+    }
+
+    if (gameState.isGameOver()) {
+      throw new Error('Game is over');
     }
 
     const drawnCard = gameState.drawCard(playerId);
