@@ -65,7 +65,7 @@ class GameEngine {
 
     const currentPlayer = gameState.getCurrentPlayer();
     if (currentPlayer.id !== playerId) {
-      throw new Error(`It's not player ${playerId}'s turn`);
+      throw new Error(`Not your turn`);
     }
 
     if (gameState.deck.length === 0) {
@@ -155,7 +155,7 @@ class GameEngine {
 
     const currentPlayer = gameState.getCurrentPlayer();
     if (currentPlayer.id !== playerId) {
-      throw new Error(`It's not player ${playerId}'s turn`);
+      throw new Error(`Not your turn`);
     }
 
     gameState.endTurn(playerId);

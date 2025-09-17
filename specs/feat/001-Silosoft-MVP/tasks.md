@@ -60,24 +60,24 @@
 ## Phase 3.3: Core Implementation (ONLY after tests are failing)
 
 ### Data Models
-- [ ] T018 [P] Player model with validation in backend/src/models/Player.js
-- [ ] T019 [P] FeatureCard model with requirements validation in backend/src/models/FeatureCard.js
-- [ ] T020 [P] ResourceCard model with role/level validation in backend/src/models/ResourceCard.js
-- [ ] T021 [P] EventCard model with effect parameters in backend/src/models/EventCard.js
-- [ ] T022 [P] GameState model with round progression in backend/src/models/GameState.js
-- [ ] T023 [P] Card factory and deck builder in backend/src/models/CardFactory.js
+- [x] T018 [P] Player model with validation in backend/src/models/Player.js
+- [x] T019 [P] FeatureCard model with requirements validation in backend/src/models/FeatureCard.js
+- [x] T020 [P] ResourceCard model with role/level validation in backend/src/models/ResourceCard.js
+- [x] T021 [P] EventCard model with effect parameters in backend/src/models/EventCard.js
+- [x] T022 [P] GameState model with round progression in backend/src/models/GameState.js
+- [x] T023 [P] Card factory and deck builder in backend/src/models/CardFactory.js
 
 ### Core Services
-- [ ] T024 GameEngine service with turn management in backend/src/services/GameEngine.js
-- [ ] T025 CardService for deck operations and shuffling in backend/src/services/CardService.js
-- [ ] T026 ScoreService for points calculation and bonuses in backend/src/services/ScoreService.js
+- [x] T024 GameEngine service with turn management in backend/src/services/GameEngine.js
+- [x] T025 CardService for deck operations and shuffling in backend/src/services/CardService.js
+- [x] T026 ScoreService for points calculation and bonuses in backend/src/services/ScoreService.js
 
 ### API Endpoints
-- [ ] T027 POST /api/v1/games endpoint implementation in backend/src/routes/games.js
-- [ ] T028 GET /api/v1/games/{gameId} endpoint implementation in backend/src/routes/games.js
-- [ ] T029 POST /api/v1/games/{gameId}/actions/draw endpoint in backend/src/routes/gameActions.js
-- [ ] T030 POST /api/v1/games/{gameId}/actions/assign endpoint in backend/src/routes/gameActions.js
-- [ ] T031 POST /api/v1/games/{gameId}/actions/end-turn endpoint in backend/src/routes/gameActions.js
+- [x] T027 POST /api/v1/games endpoint implementation in backend/src/routes/games.js
+- [x] T028 GET /api/v1/games/{gameId} endpoint implementation in backend/src/routes/games.js
+- [x] T029 POST /api/v1/games/{gameId}/actions/draw endpoint in backend/src/routes/gameActions.js
+- [x] T030 POST /api/v1/games/{gameId}/actions/assign endpoint in backend/src/routes/gameActions.js
+- [x] T031 POST /api/v1/games/{gameId}/actions/end-turn endpoint in backend/src/routes/gameActions.js
 
 ## Phase 3.4: Integration
 

@@ -43,7 +43,8 @@ router.post('/', async (req, res) => {
           ...card,
           cardType: card.requirements ? 'feature' : card.role ? 'resource' : 'event'
         })),
-        score: player.score
+        score: player.score,
+        temporarilyUnavailable: player.temporarilyUnavailable
       })),
       gamePhase: gameState.gamePhase,
       currentRound: gameState.currentRound,
@@ -59,6 +60,9 @@ router.post('/', async (req, res) => {
       })),
       deckSize: gameState.deck.length,
       maxRounds: gameState.maxRounds,
+      winCondition: gameState.winCondition,
+      isGameOver: gameState.isGameOver(),
+      lastAction: gameState.lastAction,
       createdAt: gameState.createdAt
     });
 

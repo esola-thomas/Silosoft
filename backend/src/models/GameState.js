@@ -67,17 +67,18 @@ class GameState {
   advanceToNextPlayer() {
     this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
 
-    // If we've cycled through all players, advance the round
+    // If we've cycled through all players, check if we should advance the round
     if (this.currentPlayerIndex === 0) {
+      // Check if this would be the end of the final round
+      if (this.currentRound >= this.maxRounds) {
+        this.endGame();
+        return;
+      }
+
       this.currentRound++;
 
       // Process round-based effects (restore resources, check deadlines, etc.)
       this.processRoundEffects();
-
-      // Check for game end conditions
-      if (this.currentRound > this.maxRounds) {
-        this.endGame();
-      }
     }
   }
 
@@ -101,7 +102,7 @@ class GameState {
     }
 
     if (player.id !== this.getCurrentPlayer().id) {
-      throw new Error(`It's not ${player.name}'s turn`);
+      throw new Error(`Not your turn`);
     }
 
     if (this.deck.length === 0) {
@@ -245,7 +246,7 @@ class GameState {
     }
 
     if (player.id !== this.getCurrentPlayer().id) {
-      throw new Error(`It's not ${player.name}'s turn`);
+      throw new Error(`Not your turn`);
     }
 
     this.advanceToNextPlayer();

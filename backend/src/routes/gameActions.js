@@ -186,29 +186,29 @@ router.post('/:gameId/actions/end-turn', async (req, res) => {
     const gameState = gameEngine.endTurn(gameId, playerId);
 
     res.status(200).json({
-      success: true,
-      gameState: {
-        id: gameState.id,
-        currentRound: gameState.currentRound,
-        currentPlayerIndex: gameState.currentPlayerIndex,
-        currentPlayer: gameState.getCurrentPlayer(),
-        gamePhase: gameState.gamePhase,
-        winCondition: gameState.winCondition,
-        isGameOver: gameState.isGameOver(),
-        lastAction: gameState.lastAction
-      },
+      id: gameState.id,
       players: gameState.players.map(player => ({
         id: player.id,
         name: player.name,
+        hand: player.hand.map(card => ({
+          ...card,
+          cardType: card.requirements ? 'feature' : card.role ? 'resource' : 'event'
+        })),
         score: player.score,
-        handSize: player.hand.length,
-        temporarilyUnavailable: player.temporarilyUnavailable.length
+        temporarilyUnavailable: player.temporarilyUnavailable
       })),
-      turnTransition: {
-        previousPlayer: playerId,
-        newCurrentPlayer: gameState.getCurrentPlayer().id,
-        roundAdvanced: gameState.lastAction.newRound !== gameState.currentRound - 1
-      }
+      currentRound: gameState.currentRound,
+      currentPlayerIndex: gameState.currentPlayerIndex,
+      deck: gameState.deck.map(card => ({
+        ...card,
+        cardType: card.requirements ? 'feature' : card.role ? 'resource' : 'event'
+      })),
+      featuresInPlay: gameState.featuresInPlay.map(card => ({
+        ...card,
+        cardType: 'feature'
+      })),
+      gamePhase: gameState.gamePhase,
+      winCondition: gameState.winCondition
     });
 
   } catch (error) {
@@ -219,11 +219,12 @@ router.post('/:gameId/actions/end-turn', async (req, res) => {
         error: 'Not Found',
         message: error.message
       });
-    } else if (error.message.includes("It's not") ||
+    } else if (error.message.includes("Not your turn") ||
                error.message.includes('Game is over')) {
       res.status(400).json({
         error: 'Bad Request',
-        message: error.message
+        message: error.message,
+        code: error.message.includes("Not your turn") ? 'INVALID_TURN' : 'GAME_OVER'
       });
     } else {
       res.status(500).json({
