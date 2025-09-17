@@ -120,30 +120,39 @@ router.post('/:gameId/actions/assign', async (req, res) => {
       );
     }
 
+    let pointsAwarded = 0;
+    if (wasCompleted && completedFeature) {
+      pointsAwarded = completedFeature.points;
+    }
+
     res.status(200).json({
-      success: true,
-      assigned: true,
-      completed: wasCompleted,
-      completedFeature: completedFeature,
+      featureCompleted: wasCompleted,
+      pointsAwarded: pointsAwarded,
       gameState: {
         id: gameState.id,
+        players: gameState.players.map(player => ({
+          id: player.id,
+          name: player.name,
+          hand: player.hand.map(card => ({
+            ...card,
+            cardType: card.requirements ? 'feature' : card.role ? 'resource' : 'event'
+          })),
+          score: player.score,
+          temporarilyUnavailable: player.temporarilyUnavailable
+        })),
         currentRound: gameState.currentRound,
         currentPlayerIndex: gameState.currentPlayerIndex,
-        featuresInPlay: gameState.featuresInPlay,
-        lastAction: gameState.lastAction,
-        winCondition: gameState.winCondition,
-        isGameOver: gameState.isGameOver()
-      },
-      player: {
-        id: playerId,
-        hand: player.hand,
-        score: player.score
-      },
-      allPlayers: gameState.players.map(p => ({
-        id: p.id,
-        name: p.name,
-        score: p.score
-      }))
+        deck: gameState.deck.map(card => ({
+          ...card,
+          cardType: card.requirements ? 'feature' : card.role ? 'resource' : 'event'
+        })),
+        featuresInPlay: gameState.featuresInPlay.map(card => ({
+          ...card,
+          cardType: 'feature'
+        })),
+        gamePhase: gameState.gamePhase,
+        winCondition: gameState.winCondition
+      }
     });
 
   } catch (error) {
@@ -157,10 +166,12 @@ router.post('/:gameId/actions/assign', async (req, res) => {
     } else if (error.message.includes('already assigned') ||
                error.message.includes('unavailable') ||
                error.message.includes('completed') ||
-               error.message.includes('Game is over')) {
+               error.message.includes('Game is over') ||
+               error.message.includes('Not your turn')) {
       res.status(400).json({
         error: 'Bad Request',
-        message: error.message
+        message: error.message,
+        code: error.message.includes('Not your turn') ? 'INVALID_TURN' : 'BAD_REQUEST'
       });
     } else {
       res.status(500).json({

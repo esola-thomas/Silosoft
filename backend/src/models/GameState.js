@@ -179,6 +179,9 @@ class GameState {
     }
     featureCard.assignedResources.push(resourceCard);
 
+    // Remove the resource from the player's hand
+    player.hand.splice(resourceIndex, 1);
+
     // Check if feature is now complete
     const isComplete = this.checkFeatureCompletion(featureCard);
 

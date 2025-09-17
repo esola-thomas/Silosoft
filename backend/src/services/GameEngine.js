@@ -106,6 +106,12 @@ class GameEngine {
       throw new Error(`Player ${playerId} not found`);
     }
 
+    // Check if it's the player's turn
+    const currentPlayer = gameState.getCurrentPlayer();
+    if (currentPlayer.id !== playerId) {
+      throw new Error(`Not your turn`);
+    }
+
     // Find resource in player's hand
     const resourceCard = player.hand.find(card => card.id === resourceId);
     if (!resourceCard) {
