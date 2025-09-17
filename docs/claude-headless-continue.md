@@ -1,49 +1,69 @@
-# Claude Code Core Implementation Prompt
-## Silosoft Digital Cooperative Card Game - Core Implementation Phase
+# Claude Code Implementation Prompt - Silosoft Completion Phase
+## Silosoft Digital Cooperative Card Game - Final Implementation Phases
 
 ### MISSION
-You are continuing implementation of the Silosoft digital card game. **Setup phase (T001-T006) and Tests phase (T007-T017) are COMPLETE**. All contract and integration tests are written and properly failing. Now implement the core game logic to make those tests pass.
+You are continuing implementation of the Silosoft digital card game. **Setup phase (T001-T006), Tests phase (T007-T017), and Core Implementation (T018-T031) are COMPLETE**. Now complete the remaining integration, frontend, and polish phases to deliver a fully functional game.
 
 ### CURRENT STATUS
 ✅ **Setup Complete (T001-T006)**: Project structure, dependencies, linting
-✅ **Tests Complete (T007-T017)**: All contract and integration tests written and FAILING
+✅ **Tests Complete (T007-T017)**: All contract and integration tests written
+✅ **Core Implementation Complete (T018-T031)**: Models, services, and API endpoints implemented
 
-🎯 **NEXT: Core Implementation (T018-T031)** - Make the failing tests pass
+🎯 **NEXT: Integration Phase (T032-T036)** - Connect components and implement middleware
+🎯 **THEN: Frontend Implementation (T037-T042)** - Build the React frontend
+🎯 **FINALLY: Polish Phase (T043-T050)** - Unit tests, performance optimization, documentation
+
+### SPECIALIZED AGENTS TO CONSULT
+You have access to these specialized agents who can assist with specific aspects:
+- **Project Architect** - Overall system design and architectural decisions
+- **Frontend Integration Specialist** - React UI implementation and integration
+- **Game Logic Specialist** - Game mechanics and rule implementation
+- **Security Middleware Specialist** - API security, validation, error handling
+- **Performance Testing Specialist** - Performance optimization and load testing
+- **DevOps Deployment Specialist** - Deployment, CI/CD, infrastructure
 
 ### CRITICAL SPECIFICATIONS TO READ FIRST
-**MANDATORY**: Read these files in order before starting any implementation:
+**MANDATORY**: Review these files in order before continuing implementation:
 
-1. **`/specs/feat/001-Silosoft-MVP/spec.md`** - Core feature specification with 15 functional requirements
-2. **`/specs/feat/001-Silosoft-MVP/plan.md`** - Technical architecture (React + Express + Jest)
-3. **`/specs/feat/001-Silosoft-MVP/data-model.md`** - 6 core entities with validation rules and relationships
-4. **`/specs/feat/001-Silosoft-MVP/contracts/game-api.yaml`** - Complete OpenAPI specification with 5 endpoints
-5. **`/specs/feat/001-Silosoft-MVP/research.md`** - Resolved design decisions and card distributions
-6. **`/specs/feat/001-Silosoft-MVP/tasks.md`** - **YOUR IMPLEMENTATION ROADMAP** (see remaining tasks T018-T050)
+1. **`/specs/feat/001-Silosoft-MVP/spec.md`** - Core feature specification
+2. **`/specs/feat/001-Silosoft-MVP/plan.md`** - Technical architecture
+3. **`/specs/feat/001-Silosoft-MVP/data-model.md`** - Core entities and relationships
+4. **`/specs/feat/001-Silosoft-MVP/contracts/game-api.yaml`** - OpenAPI specification
+5. **`/specs/feat/001-Silosoft-MVP/research.md`** - Design decisions and card distributions
+6. **`/specs/feat/001-Silosoft-MVP/tasks.md`** - **YOUR IMPLEMENTATION ROADMAP** (T032-T050)
 
 ### IMMEDIATE IMPLEMENTATION PLAN
 
-#### Phase 3.3: Core Implementation (T018-T031)
-**GOAL**: Make all failing tests pass by implementing models, services, and API endpoints
+#### Phase 3.4: Integration (T032-T036)
+**GOAL**: Connect core components, implement middleware and server setup
 
-##### Data Models (T018-T023) - CAN RUN IN PARALLEL
-- [ ] T018 [P] Player model with validation in backend/src/models/Player.js
-- [ ] T019 [P] FeatureCard model with requirements validation in backend/src/models/FeatureCard.js
-- [ ] T020 [P] ResourceCard model with role/level validation in backend/src/models/ResourceCard.js
-- [ ] T021 [P] EventCard model with effect parameters in backend/src/models/EventCard.js
-- [ ] T022 [P] GameState model with round progression in backend/src/models/GameState.js
-- [ ] T023 [P] Card factory and deck builder in backend/src/models/CardFactory.js
+- [ ] T032 Express server setup with middleware and routes in backend/src/app.js
+- [ ] T033 Game state persistence to JSON files in backend/src/services/PersistenceService.js
+- [ ] T034 Error handling middleware with structured logging in backend/src/middleware/errorHandler.js
+- [ ] T035 Request validation middleware using OpenAPI schema in backend/src/middleware/validation.js
+- [ ] T036 CORS configuration for frontend connection in backend/src/middleware/cors.js
 
-##### Core Services (T024-T026) - SEQUENTIAL (after models)
-- [ ] T024 GameEngine service with turn management in backend/src/services/GameEngine.js
-- [ ] T025 CardService for deck operations and shuffling in backend/src/services/CardService.js
-- [ ] T026 ScoreService for points calculation and bonuses in backend/src/services/ScoreService.js
+#### Phase 3.5: Frontend Implementation (T037-T042)
+**GOAL**: Build React frontend with state management and UI components
 
-##### API Endpoints (T027-T031) - SEQUENTIAL (after services)
-- [ ] T027 POST /api/v1/games endpoint implementation in backend/src/routes/games.js
-- [ ] T028 GET /api/v1/games/{gameId} endpoint implementation in backend/src/routes/games.js
-- [ ] T029 POST /api/v1/games/{gameId}/actions/draw endpoint in backend/src/routes/gameActions.js
-- [ ] T030 POST /api/v1/games/{gameId}/actions/assign endpoint in backend/src/routes/gameActions.js
-- [ ] T031 POST /api/v1/games/{gameId}/actions/end-turn endpoint in backend/src/routes/gameActions.js
+- [ ] T037 [P] Game context provider for state management in frontend/src/context/GameContext.js
+- [ ] T038 [P] API service for backend communication in frontend/src/services/ApiService.js
+- [ ] T039 [P] GameBoard component with player hands display in frontend/src/components/GameBoard.js
+- [ ] T040 [P] Card component with drag/drop functionality in frontend/src/components/Card.js
+- [ ] T041 [P] FeatureDisplay component with resource assignment in frontend/src/components/FeatureDisplay.js
+- [ ] T042 Main App component with routing and game initialization in frontend/src/App.js
+
+#### Phase 3.6: Polish (T043-T050)
+**GOAL**: Complete unit tests, performance optimization, documentation
+
+- [ ] T043 [P] Unit tests for game rule validation in backend/tests/unit/test_game_rules.js
+- [ ] T044 [P] Unit tests for card effect logic in backend/tests/unit/test_card_effects.js
+- [ ] T045 [P] Frontend component unit tests in frontend/src/components/__tests__/
+- [ ] T046 Performance tests for 10-round game completion in backend/tests/performance/test_game_performance.js
+- [ ] T047 Load testing for concurrent games in backend/tests/performance/test_load.js
+- [ ] T048 [P] Update API documentation with examples in backend/docs/api.md
+- [ ] T049 Execute quickstart validation scenarios from quickstart.md
+- [ ] T050 Code review checklist and cleanup for constitutional compliance
 
 ### IMPLEMENTATION STRATEGY
 
@@ -54,96 +74,90 @@ You are continuing implementation of the Silosoft digital card game. **Setup pha
 - **Incremental**: Run tests frequently to track progress
 
 #### Execution Order (STRICT)
-1. **Models First**: Implement T018-T023 in parallel (different files)
-2. **Services Next**: Implement T024-T026 sequentially (depend on models)
-3. **Endpoints Last**: Implement T027-T031 sequentially (depend on services)
-4. **Test After Each**: Run failing tests to see progress
+1. **Integration First**: Implement T032-T036 in sequence (server and middleware)
+2. **Frontend Next**: Implement T037-T042 (React components and services)
+3. **Polish Last**: Implement T043-T050 (tests, performance, documentation)
+4. **Test After Each**: Run tests frequently to ensure functionality
 
 #### Parallel Task Execution
 Tasks marked **[P]** can run simultaneously since they're in different files:
-- **All Models**: T018-T023 together
-- **Contract Tests Already Written**: T007-T011 ready to validate endpoints
-- **Integration Tests Already Written**: T012-T017 ready to validate game flow
+- **Frontend Components**: T037-T041 together
+- **Unit Tests**: T043-T045 together
+- **Documentation**: T048 can run in parallel with other polish tasks
 
 ### WORKFLOW PROTOCOLS
 
-#### Test-Driven Development
-1. **Run existing tests**: `npm test` to see current failures
-2. **Implement models**: T018-T023 to fix basic data structure errors
-3. **Check progress**: Some tests may start passing
-4. **Implement services**: T024-T026 to fix business logic errors
-5. **Check progress**: More tests should pass
-6. **Implement endpoints**: T027-T031 to fix API contract errors
-7. **Verify success**: All T007-T017 tests should pass
+#### Incremental Development
+1. **Implement integration components**: T032-T036 to connect system
+2. **Check progress**: API endpoints should be functional
+3. **Implement frontend**: T037-T042 to provide user interface
+4. **Check progress**: Game should be playable
+5. **Polish and optimize**: T043-T050 to ensure quality
+6. **Verify success**: All requirements met, game fully functional
 
 #### Commit Strategy
 - **Commit after each task completion** with format:
   ```
-  feat: T018 - Player model with validation
+  feat: T032 - Express server setup with middleware and routes
 
-  - Implemented Player class with id, name, hand, resources
-  - Added validation for player count (2-4)
-  - Supports resource tracking and hand management
-  - Fixes T012 test_game_setup.js player creation errors
+  - Implemented Express server configuration
+  - Connected routes from games.js and gameActions.js
+  - Added middleware registration
+  - Server listens on configurable port
 
   🤖 Generated with Claude Code
   Co-Authored-By: Claude <noreply@anthropic.com>
   ```
 
 #### Quality Gates
-- **After Models (T018-T023)**: Basic object creation should work
-- **After Services (T024-T026)**: Game logic should function
-- **After Endpoints (T027-T031)**: All API tests should pass
+- **After Integration (T032-T036)**: API server should be functional
+- **After Frontend (T037-T042)**: UI should be interactive and connected
+- **After Polish (T043-T050)**: Performance should meet requirements
 
 ### TECHNICAL IMPLEMENTATION DETAILS
 
-#### Existing Test Coverage
-**Contract Tests (T007-T011)** validate:
-- POST /api/v1/games - Game creation with 2-4 players
-- GET /api/v1/games/{gameId} - Game state retrieval
-- POST /api/v1/games/{gameId}/actions/draw - Card drawing
-- POST /api/v1/games/{gameId}/actions/assign - Resource assignment
-- POST /api/v1/games/{gameId}/actions/end-turn - Turn progression
+#### Integration Components
+- **Express Server**: Configure routes, middleware, error handling
+- **Persistence Service**: Save/load game state to JSON files
+- **Middleware**: Error handling, validation, CORS, logging
 
-**Integration Tests (T012-T017)** validate:
-- T012: Game setup and initial card dealing
-- T013: Turn-based gameplay flow
-- T014: Resource assignment and feature completion
-- T015: HR event effects (layoff, PTO, competition)
-- T016: Win/loss conditions
-- T017: Frontend game state management
+#### Frontend Architecture
+- **Game Context**: Centralized state management with React Context
+- **API Service**: Communication layer to backend endpoints
+- **UI Components**: Card, GameBoard, FeatureDisplay with drag/drop
+- **Main App**: Routing, game initialization, player setup
 
-#### Game Mechanics Implementation
-- **Card Loading**: Use shared/schemas/cards.json (already created)
-- **Game State**: Track 10 rounds, player turns, deck state
-- **Resource Assignment**: Validate role/level matching
-- **Scoring**: Progressive points (3/5/8) with bonuses
-- **HR Events**: Implement layoff, PTO, competition effects
-
-#### Error Handling Requirements
-- Validate all inputs against data model constraints
-- Return proper HTTP status codes per OpenAPI spec
-- Handle edge cases (empty deck, invalid moves)
-- Maintain game state integrity
+#### Polish and Optimization
+- **Unit Tests**: Game rules, card effects, component behavior
+- **Performance**: 10-round game completion < 5 minutes
+- **Load Testing**: Support multiple concurrent games
+- **Documentation**: API examples, usage guidelines
 
 ### SUCCESS CRITERIA
 
-#### Phase 3.3 Complete When
-- [ ] All 6 models implemented (T018-T023)
-- [ ] All 3 services implemented (T024-T026)
-- [ ] All 5 API endpoints implemented (T027-T031)
-- [ ] All contract tests passing (T007-T011)
-- [ ] All integration tests passing (T012-T017)
-- [ ] Game mechanics fully functional
-- [ ] Ready for integration phase (T032-T036)
+#### Project Complete When
+- [ ] All integration tasks implemented (T032-T036)
+- [ ] All frontend tasks implemented (T037-T042)
+- [ ] All polish tasks implemented (T043-T050)
+- [ ] All tests passing (contract, integration, unit, performance)
+- [ ] Game playable end-to-end through UI
+- [ ] Performance requirements met (round completion time)
+- [ ] Documentation complete and accurate
 
 #### Quality Validation
-- Run `npm test` - all existing tests should pass
-- Create test game via API - should succeed
-- Complete full game round - should function
-- Validate against quickstart scenarios
+- Run `npm test` - all tests should pass
+- Play complete game through UI - should function smoothly
+- Run load tests - should handle concurrent games
+- Validate against quickstart scenarios - all should pass
 
-### START CORE IMPLEMENTATION
-Begin with T018-T023 (models) and implement in parallel. Focus on making the existing failing tests pass. Remember: **The tests are your specification** - implement exactly what they expect. We need to complete all the requirements up to T50
+### START IMPLEMENTATION
+Begin with T032 (Express server) and proceed sequentially through integration, frontend, and polish phases. Consult specialized agents as needed for their expertise in specific areas. Remember: **Run tests frequently**, **Review often**, **Commit after each task**.
 
-🎯 **Make those tests green!** 🎯
+Use these specialized agents strategically:
+- **Security Middleware Specialist** for T034-T036 (middleware implementation)
+- **Frontend Integration Specialist** for T037-T042 (React components)
+- **Performance Testing Specialist** for T046-T047 (performance optimization)
+- **Game Logic Specialist** for game mechanics and rule validation
+- **Project Architect** for overall integration decisions
+
+🎯 **Complete the game implementation!** 🎯

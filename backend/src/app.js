@@ -1,24 +1,49 @@
 const express = require('express');
-const cors = require('cors');
 const gamesRouter = require('./routes/games');
 const gameActionsRouter = require('./routes/gameActions');
 
+// Import middleware
+const corsMiddleware = require('./middleware/cors');
+const validationMiddleware = require('./middleware/validation');
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+
 const app = express();
 
-// Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+// Trust proxy for production environments
+app.set('trust proxy', 1);
+
+// CORS middleware (configured for frontend connection)
+app.use(corsMiddleware);
+
+// Body parsing middleware
+app.use(express.json({
+  limit: '10mb',
+  strict: true,
+  type: ['application/json']
+}));
+app.use(express.urlencoded({
+  extended: true,
+  limit: '10mb'
 }));
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-
-// Logging middleware
+// Request logging middleware
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
+  const timestamp = new Date().toISOString();
+  const userAgent = req.get('User-Agent') || 'unknown';
+  console.log(`${timestamp} ${req.method} ${req.path} - ${req.ip} - ${userAgent}`);
+
+  // Log request body for POST/PUT requests (sanitized)
+  if ((req.method === 'POST' || req.method === 'PUT') && req.body) {
+    const sanitizedBody = { ...req.body };
+    // Remove sensitive data from logs if any
+    console.log(`  Body: ${JSON.stringify(sanitizedBody)}`);
+  }
+
   next();
 });
+
+// Request validation middleware (using OpenAPI schema)
+app.use('/api/v1', validationMiddleware);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -33,28 +58,11 @@ app.get('/health', (req, res) => {
 app.use('/api/v1/games', gamesRouter);
 app.use('/api/v1/games', gameActionsRouter);
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: `Route ${req.method} ${req.originalUrl} not found`
-  });
-});
+// 404 handler for undefined routes
+app.use('*', notFoundHandler);
 
-// Global error handler
-app.use((error, req, res, next) => {
-  console.error('Global error handler:', error);
-
-  if (res.headersSent) {
-    return next(error);
-  }
-
-  res.status(500).json({
-    error: 'Internal Server Error',
-    message: error.message,
-    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
-  });
-});
+// Global error handler (must be last middleware)
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 
