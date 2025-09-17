@@ -32,30 +32,30 @@
 
 ## Phase 3.1: Setup
 
-- [ ] T001 Create web app project structure (backend/, frontend/, shared/)
-- [ ] T002 Initialize backend Node.js project with Express, Jest, CORS dependencies
-- [ ] T003 Initialize frontend React project with Context API, React Testing Library
-- [ ] T004 [P] Configure ESLint and Prettier for backend in backend/.eslintrc.js
-- [ ] T005 [P] Configure ESLint and Prettier for frontend in frontend/.eslintrc.js
-- [ ] T006 Create shared card definitions JSON schema in shared/schemas/cards.json
+- [x] T001 Create web app project structure (backend/, frontend/, shared/)
+- [x] T002 Initialize backend Node.js project with Express, Jest, CORS dependencies
+- [x] T003 Initialize frontend React project with Context API, React Testing Library
+- [x] T004 [P] Configure ESLint and Prettier for backend in backend/.eslintrc.js
+- [x] T005 [P] Configure ESLint and Prettier for frontend in frontend/.eslintrc.js
+- [x] T006 Create shared card definitions JSON schema in shared/schemas/cards.json
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
 
 ### Contract Tests (API Endpoints)
-- [ ] T007 [P] Contract test POST /api/v1/games in backend/tests/contract/test_games_post.js
-- [ ] T008 [P] Contract test GET /api/v1/games/{gameId} in backend/tests/contract/test_games_get.js
-- [ ] T009 [P] Contract test POST /api/v1/games/{gameId}/actions/draw in backend/tests/contract/test_draw.js
-- [ ] T010 [P] Contract test POST /api/v1/games/{gameId}/actions/assign in backend/tests/contract/test_assign.js
-- [ ] T011 [P] Contract test POST /api/v1/games/{gameId}/actions/end-turn in backend/tests/contract/test_end_turn.js
+- [x] T007 [P] Contract test POST /api/v1/games in backend/tests/contract/test_games_post.js
+- [x] T008 [P] Contract test GET /api/v1/games/{gameId} in backend/tests/contract/test_games_get.js
+- [x] T009 [P] Contract test POST /api/v1/games/{gameId}/actions/draw in backend/tests/contract/test_draw.js
+- [x] T010 [P] Contract test POST /api/v1/games/{gameId}/actions/assign in backend/tests/contract/test_assign.js
+- [x] T011 [P] Contract test POST /api/v1/games/{gameId}/actions/end-turn in backend/tests/contract/test_end_turn.js
 
 ### Integration Tests (Game Mechanics)
-- [ ] T012 [P] Integration test game setup and initial deal in backend/tests/integration/test_game_setup.js
-- [ ] T013 [P] Integration test turn-based gameplay flow in backend/tests/integration/test_turn_flow.js
-- [ ] T014 [P] Integration test resource assignment and feature completion in backend/tests/integration/test_feature_completion.js
-- [ ] T015 [P] Integration test HR event effects (layoff, PTO, competition) in backend/tests/integration/test_events.js
-- [ ] T016 [P] Integration test win/loss conditions in backend/tests/integration/test_game_end.js
-- [ ] T017 [P] Frontend integration test for game state management in frontend/src/tests/integration/test_game_state.js
+- [x] T012 [P] Integration test game setup and initial deal in backend/tests/integration/test_game_setup.js
+- [x] T013 [P] Integration test turn-based gameplay flow in backend/tests/integration/test_turn_flow.js
+- [x] T014 [P] Integration test resource assignment and feature completion in backend/tests/integration/test_feature_completion.js
+- [x] T015 [P] Integration test HR event effects (layoff, PTO, competition) in backend/tests/integration/test_events.js
+- [x] T016 [P] Integration test win/loss conditions in backend/tests/integration/test_game_end.js
+- [x] T017 [P] Frontend integration test for game state management in frontend/src/tests/integration/test_game_state.js
 
 ## Phase 3.3: Core Implementation (ONLY after tests are failing)
 
