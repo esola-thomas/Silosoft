@@ -81,27 +81,27 @@
 
 ## Phase 3.4: Integration
 
-- [ ] T032 Express server setup with middleware and routes in backend/src/app.js
-- [ ] T033 Game state persistence to JSON files in backend/src/services/PersistenceService.js
-- [ ] T034 Error handling middleware with structured logging in backend/src/middleware/errorHandler.js
-- [ ] T035 Request validation middleware using OpenAPI schema in backend/src/middleware/validation.js
-- [ ] T036 CORS configuration for frontend connection in backend/src/middleware/cors.js
+- [x] T032 Express server setup with middleware and routes in backend/src/app.js
+- [x] T033 Game state persistence to JSON files in backend/src/services/PersistenceService.js
+- [x] T034 Error handling middleware with structured logging in backend/src/middleware/errorHandler.js
+- [x] T035 Request validation middleware using OpenAPI schema in backend/src/middleware/validation.js
+- [x] T036 CORS configuration for frontend connection in backend/src/middleware/cors.js
 
 ## Phase 3.5: Frontend Implementation
 
-- [ ] T037 [P] Game context provider for state management in frontend/src/context/GameContext.js
-- [ ] T038 [P] API service for backend communication in frontend/src/services/ApiService.js
-- [ ] T039 [P] GameBoard component with player hands display in frontend/src/components/GameBoard.js
-- [ ] T040 [P] Card component with drag/drop functionality in frontend/src/components/Card.js
-- [ ] T041 [P] FeatureDisplay component with resource assignment in frontend/src/components/FeatureDisplay.js
-- [ ] T042 Main App component with routing and game initialization in frontend/src/App.js
+- [x] T037 [P] Game context provider for state management in frontend/src/context/GameContext.js
+- [x] T038 [P] API service for backend communication in frontend/src/services/ApiService.js
+- [x] T039 [P] GameBoard component with player hands display in frontend/src/components/GameBoard.js
+- [x] T040 [P] Card component with drag/drop functionality in frontend/src/components/Card.js
+- [x] T041 [P] FeatureDisplay component with resource assignment in frontend/src/components/FeatureDisplay.js
+- [x] T042 Main App component with routing and game initialization in frontend/src/App.js
 
 ## Phase 3.6: Polish
 
-- [ ] T043 [P] Unit tests for game rule validation in backend/tests/unit/test_game_rules.js
-- [ ] T044 [P] Unit tests for card effect logic in backend/tests/unit/test_card_effects.js
-- [ ] T045 [P] Frontend component unit tests in frontend/src/components/__tests__/
-- [ ] T046 Performance tests for 10-round game completion in backend/tests/performance/test_game_performance.js
+- [x] T043 [P] Unit tests for game rule validation in backend/tests/unit/test_game_rules.js
+- [x] T044 [P] Unit tests for card effect logic in backend/tests/unit/test_card_effects.js
+- [x] T045 [P] Frontend component unit tests in frontend/src/components/__tests__/
+- [x] T046 Performance tests for 10-round game completion in backend/tests/performance/test_game_performance.js
 - [ ] T047 Load testing for concurrent games in backend/tests/performance/test_load.js
 - [ ] T048 [P] Update API documentation with examples in backend/docs/api.md
 - [ ] T049 Execute quickstart validation scenarios from quickstart.md

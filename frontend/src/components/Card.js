@@ -87,9 +87,15 @@ const Card = memo(({
     }
 
     const reqs = [];
-    if (card.requirements.dev > 0) reqs.push(`💻 ${card.requirements.dev}`);
-    if (card.requirements.pm > 0) reqs.push(`📋 ${card.requirements.pm}`);
-    if (card.requirements.ux > 0) reqs.push(`🎨 ${card.requirements.ux}`);
+    if (card.requirements.dev > 0) {
+      reqs.push(`💻 ${card.requirements.dev}`);
+    }
+    if (card.requirements.pm > 0) {
+      reqs.push(`📋 ${card.requirements.pm}`);
+    }
+    if (card.requirements.ux > 0) {
+      reqs.push(`🎨 ${card.requirements.ux}`);
+    }
 
     return reqs.join(' | ');
   };

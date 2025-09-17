@@ -18,7 +18,7 @@ const FeatureDisplay = memo(({
 
   // Calculate completion status for each feature
   const featuresWithStatus = useMemo(() => {
-    return features.map(feature => {
+    return (features || []).filter(feature => feature != null).map(feature => {
       const assigned = feature.assignedResources || [];
       const requirements = feature.requirements || {};
 
@@ -29,12 +29,12 @@ const FeatureDisplay = memo(({
       }, {});
 
       // Check if requirements are met
-      const isComplete = Object.entries(requirements).every(([role, needed]) => {
+      const isComplete = Object.entries(requirements || {}).every(([role, needed]) => {
         return (assignedByRole[role] || 0) >= needed;
       });
 
       // Calculate progress percentage
-      const totalNeeded = Object.values(requirements).reduce((sum, val) => sum + val, 0);
+      const totalNeeded = Object.values(requirements || {}).reduce((sum, val) => sum + val, 0);
       const totalAssigned = Object.values(assignedByRole).reduce((sum, val) => sum + val, 0);
       const progress = totalNeeded > 0 ? Math.min((totalAssigned / totalNeeded) * 100, 100) : 0;
 
@@ -64,11 +64,11 @@ const FeatureDisplay = memo(({
 
   // Render requirement progress bar
   const renderRequirementProgress = (feature) => {
-    const { requirements, assignedByRole } = feature;
+    const { requirements = {}, assignedByRole = {} } = feature;
 
     return (
       <div className="requirement-progress">
-        {Object.entries(requirements).map(([role, needed]) => {
+        {Object.entries(requirements || {}).map(([role, needed]) => {
           const assigned = assignedByRole[role] || 0;
           const percentage = needed > 0 ? Math.min((assigned / needed) * 100, 100) : 0;
           const isComplete = assigned >= needed;
@@ -267,7 +267,11 @@ const FeatureDisplay = memo(({
       </div>
 
       <div className="feature-display-content">
-        {featuresWithStatus.map(renderFeature)}
+        {featuresWithStatus.map((feature, index) => (
+          <div key={feature.id || index}>
+            {renderFeature(feature)}
+          </div>
+        ))}
       </div>
     </div>
   );

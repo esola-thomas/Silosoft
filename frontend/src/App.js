@@ -40,7 +40,7 @@ function GameSetup() {
     const validationErrors = [];
 
     // Validate player names
-    const trimmedNames = playerNames.map(name => name.trim());
+    const trimmedNames = playerNames.map((name) => name.trim());
 
     trimmedNames.forEach((name, index) => {
       if (!name) {
@@ -100,7 +100,7 @@ function GameSetup() {
                     onChange={(e) => updatePlayerName(index, e.target.value)}
                     placeholder={`Enter player ${index + 1} name`}
                     maxLength={20}
-                    className={errors.some(err => err.includes(`Player ${index + 1}`)) ? 'error' : ''}
+                    className={errors.some((err) => err.includes(`Player ${index + 1}`)) ? 'error' : ''}
                   />
                   {playerNames.length > 2 && (
                     <button
