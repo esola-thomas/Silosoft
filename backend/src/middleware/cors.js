@@ -126,10 +126,10 @@ function createCorsMiddleware() {
   const isDevelopment = process.env.NODE_ENV !== 'production';
   const options = isDevelopment ? devCorsOptions : corsOptions;
 
-  // Log CORS configuration on startup
-  if (isDevelopment) {
+  // Log CORS configuration on startup (development only)
+  if (isDevelopment && process.env.NODE_ENV === 'development') {
     console.log('CORS: Development mode - allowing all origins');
-  } else {
+  } else if (!isDevelopment && process.env.NODE_ENV !== 'test') {
     console.log('CORS: Production mode - restricted origins:', getAllowedOrigins());
   }
 
@@ -174,7 +174,7 @@ function securityHeaders(req, res, next) {
  * Log CORS requests for debugging
  */
 function corsLogger(req, res, next) {
-  if (process.env.NODE_ENV !== 'production' && req.headers.origin) {
+  if (process.env.NODE_ENV === 'development' && req.headers.origin) {
     console.log(`CORS: ${req.method} ${req.path} from ${req.headers.origin}`);
   }
   next();

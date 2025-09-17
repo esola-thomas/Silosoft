@@ -102,10 +102,10 @@
 - [x] T044 [P] Unit tests for card effect logic in backend/tests/unit/test_card_effects.js
 - [x] T045 [P] Frontend component unit tests in frontend/src/components/__tests__/
 - [x] T046 Performance tests for 10-round game completion in backend/tests/performance/test_game_performance.js
-- [ ] T047 Load testing for concurrent games in backend/tests/performance/test_load.js
-- [ ] T048 [P] Update API documentation with examples in backend/docs/api.md
-- [ ] T049 Execute quickstart validation scenarios from quickstart.md
-- [ ] T050 Code review checklist and cleanup for constitutional compliance
+- [x] T047 Load testing for concurrent games in backend/tests/performance/test_load.js
+- [x] T048 [P] Update API documentation with examples in backend/docs/api.md
+- [x] T049 Execute quickstart validation scenarios from quickstart.md
+- [x] T050 Code review checklist and cleanup for constitutional compliance
 
 ## Dependencies
 

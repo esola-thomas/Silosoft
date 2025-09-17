@@ -25,7 +25,8 @@ class PersistenceService {
       await fs.mkdir(this.gamesDir, { recursive: true });
       await fs.mkdir(this.backupDir, { recursive: true });
       this.initialized = true;
-      console.log('PersistenceService initialized successfully');
+      // Development logging only
+      process.env.NODE_ENV === 'development' && console.log('PersistenceService initialized successfully');
     } catch (error) {
       console.error('Failed to initialize PersistenceService:', error);
       throw error;
@@ -81,7 +82,8 @@ class PersistenceService {
 
       await fs.writeFile(filePath, jsonData, 'utf8');
 
-      console.log(`Game ${gameState.id} saved successfully`);
+      // Development logging only
+      process.env.NODE_ENV === 'development' && console.log(`Game ${gameState.id} saved successfully`);
       return true;
 
     } catch (error) {
@@ -110,7 +112,8 @@ class PersistenceService {
       // Deserialize and restore the game state
       const gameState = this.deserializeGameState(parsedData);
 
-      console.log(`Game ${gameId} loaded successfully`);
+      // Development logging only
+      process.env.NODE_ENV === 'development' && console.log(`Game ${gameId} loaded successfully`);
       return gameState;
 
     } catch (error) {
@@ -154,7 +157,8 @@ class PersistenceService {
       await this.createBackup(gameId);
 
       await fs.unlink(filePath);
-      console.log(`Game ${gameId} deleted successfully`);
+      // Development logging only
+      process.env.NODE_ENV === 'development' && console.log(`Game ${gameId} deleted successfully`);
       return true;
 
     } catch (error) {
@@ -200,7 +204,8 @@ class PersistenceService {
       const data = await fs.readFile(filePath, 'utf8');
       await fs.writeFile(backupPath, data, 'utf8');
 
-      console.log(`Backup created for game ${gameId}`);
+      // Development logging only
+      process.env.NODE_ENV === 'development' && console.log(`Backup created for game ${gameId}`);
       return true;
 
     } catch (error) {
@@ -311,7 +316,8 @@ class PersistenceService {
           for (const file of toDelete) {
             const filePath = path.join(this.backupDir, file);
             await fs.unlink(filePath);
-            console.log(`Deleted old backup: ${file}`);
+            // Development logging only
+            process.env.NODE_ENV === 'development' && console.log(`Deleted old backup: ${file}`);
           }
         }
       }

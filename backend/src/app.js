@@ -26,21 +26,24 @@ app.use(express.urlencoded({
   limit: '10mb'
 }));
 
-// Request logging middleware
-app.use((req, res, next) => {
-  const timestamp = new Date().toISOString();
-  const userAgent = req.get('User-Agent') || 'unknown';
-  console.log(`${timestamp} ${req.method} ${req.path} - ${req.ip} - ${userAgent}`);
+// Request logging middleware (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    const timestamp = new Date().toISOString();
+    const userAgent = req.get('User-Agent') || 'unknown';
+    // Development logging only
+    process.env.NODE_ENV === 'development' &&
+      console.log(`${timestamp} ${req.method} ${req.path} - ${req.ip} - ${userAgent}`);
 
-  // Log request body for POST/PUT requests (sanitized)
-  if ((req.method === 'POST' || req.method === 'PUT') && req.body) {
-    const sanitizedBody = { ...req.body };
-    // Remove sensitive data from logs if any
-    console.log(`  Body: ${JSON.stringify(sanitizedBody)}`);
-  }
+    // Log request body for POST/PUT requests (sanitized) - development only
+    if ((req.method === 'POST' || req.method === 'PUT') && req.body && process.env.NODE_ENV === 'development') {
+      const sanitizedBody = { ...req.body };
+      console.log(`  Body: ${JSON.stringify(sanitizedBody)}`);
+    }
 
-  next();
-});
+    next();
+  });
+}
 
 // Request validation middleware (using OpenAPI schema)
 app.use('/api/v1', validationMiddleware);
@@ -69,9 +72,12 @@ const PORT = process.env.PORT || 3001;
 // Only start server if this file is run directly (not during testing)
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`Silosoft Game Server running on port ${PORT}`);
-    console.log(`Health check: http://localhost:${PORT}/health`);
-    console.log(`API base: http://localhost:${PORT}/api/v1`);
+    // Server startup logging (production safe)
+    if (process.env.NODE_ENV !== 'test') {
+      console.log(`Silosoft Game Server running on port ${PORT}`);
+      console.log(`Health check: http://localhost:${PORT}/health`);
+      console.log(`API base: http://localhost:${PORT}/api/v1`);
+    }
   });
 }
 
