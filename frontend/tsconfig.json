@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // Override module to satisfy TS5110 with NodeNext resolution
+    "module": "NodeNext",
+    "jsx": "react-jsx",
+    "types": ["vite/client", "node", "react", "react-dom"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "moduleDetection": "force"
+  },
+  "include": ["src"],
+  "exclude": ["dist", "node_modules"]
+}

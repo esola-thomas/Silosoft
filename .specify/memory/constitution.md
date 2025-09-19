@@ -35,7 +35,7 @@ The digital version must provide **clear state visibility**: current round, card
 
 2. **Performance Standards**
 
-   * Must support a full game cycle (10 rounds) in < 5 minutes.
+   * Must support a full game cycle (10 turns) in < 5 minutes.
    * Load time < 5 seconds.
    * Single-player mode mandatory; multiplayer is a stretch goal.
 
@@ -63,7 +63,7 @@ The digital version must provide **clear state visibility**: current round, card
 3. **Testing**
 
    * Unit tests for card resolution logic.
-   * Integration test for full 10-round playthrough.
+   * Integration test for full 10-turn playthrough.
    * Manual playtest feedback after each sprint.
 
 ---

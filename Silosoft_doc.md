@@ -37,10 +37,10 @@
 - Completed features are never affected retroactively.
 - If an event cannot legally resolve (e.g., no resources to discard), it is **nullified** with no effect.
 - Event Definitions (all reference only the player's hand, since no persistent assignments exist):
-  - **Layoff**: Randomly discard 1 resource from your hand. (If hand empty → nullify.)
-  - **Reorg**: Choose 1 resource from your hand and give it to another player's hand (ownership transfers). If no other players or no resources → nullify.
-  - **Company Competition**: You must complete at least 1 feature on **your next turn**. If you fail, choose 1 of your completed features to forfeit (remove from team total and place into a "lost" pile). If you have none, instead discard 2 random resources (or as many as you have if <2).
-  - **PTO / PLM**: Choose 1 resource in your hand; mark it PTO. A PTO resource cannot be used in a completion bundle on this turn or your next turn; it becomes usable again after your next turn ends. (If no resources → nullify.)
+  - **Layoff**: Discard 1 resource from your hand. (If hand empty → nullify.) In the interactive digital version you now choose the specific card to discard; if you do not choose, a random fallback may be applied server‑side (tests still allow random behavior when no selection supplied).
+  - **Reorg**: Move exactly 1 resource from your hand to a different player's hand. You now choose both the card and the destination player (if you omit choices the server falls back to random selection). (If single player or you have no resources → nullify.)
+  - **Company Competition**: Sets a personal challenge: you must complete at least one feature on your *next* turn (the turn after it was drawn). If the deadline turn ends without any completion, apply a penalty: remove your most recently completed feature (if any) else discard up to 2 random resource cards. Either completing any feature during the challenge window or suffering the penalty clears the challenge.
+  - **PTO / PLM**: Lock exactly 1 resource card in your hand; that card cannot be used for completion until after your *next* turn ends (`availableOnTurn = currentTurn + 2`). You now explicitly select which card to lock (fallback to random if omitted). If no resources → nullify. Multiple PTO locks may stack across different draws.
 
 > Optional Variant: Layoff could allow the player to choose the resource (less punitive); current default uses randomness for tension.
 
@@ -78,8 +78,8 @@ Each player executes the following steps on their turn (turnNumber increments af
   - Check Win Condition (instant).
 
 ### 4. Turn End
-- Decrement any PTO timers (resources marked PTO become available after the owner's next turn ends).
-- If a Company Competition timer on you expires now (you had one and didn't complete a feature this turn): apply its penalty.
+- Unlock PTO card locks whose `availableOnTurn <= current turn` (card becomes usable again).
+- If a Company Competition challenge on you reaches its deadline turn end without a completion: apply its penalty (remove last completed feature or discard two resources) and clear the challenge.
 - Increment `turnNumber`; if `turnNumber > 10` and win condition not met → Loss.
 
 ---
@@ -137,7 +137,7 @@ Errors / invalid actions should be rejected without mutating state.
 ## Frontend UI (High-Level Overview)
 
 ### Layout Regions
-1. Header: Turn X / 10, Team Progress (Completed / Target), Active Player highlight, optional Competition warning icon.
+1. Header: Turn X / 10, Team Progress (Completed / Target), Active Player highlight, per-player Competition challenge countdown chips (CH:PlayerId:Remaining), replay export button.
 2. Board: Row or grid showing each player's current feature (title + required role points). Active player slightly emphasized.
 3. Hand Panel (bottom): Local player’s resource cards and action buttons (Trade, Complete, Pass). PTO cards show a lock icon.
 4. Sidebar / Log (optional): Recent events (last few lines) and timers (Competition, PTO summary) or collapsible on mobile.
@@ -164,7 +164,7 @@ Errors / invalid actions should be rejected without mutating state.
 ### Visual Cues
 - Role colors: Dev (Blue), PM (Green), UX (Purple), Contractor (Gold).
 - Active player border glow; competition timer as small countdown chip.
-- PTO: dim card + lock icon + tooltip “Unavailable until after your next turn”.
+- PTO: dim card + lock icon + tooltip “Unavailable until after your next turn”. Now chosen card highlighted at event resolution.
 - Completion: brief pulse + success toast.
 
 ### Accessibility (Essentials)
@@ -182,14 +182,16 @@ log: LogEntry[] (capped)
 ```
 
 ### Event Handling (UI)
-- Layoff: auto pick random card → toast.
-- Reorg: picker modal (select card + recipient) → confirm.
-- Competition: show timer chip until resolved or penalty triggered.
-- PTO: card lock overlay + countdown; cannot include in completion selection.
+- Layoff: modal now lists your resource cards allowing selection; acknowledging applies discard.
+- Reorg: modal shows your resource cards and target player buttons; you must pick card + target to enable acknowledge.
+- Competition: still passive (just sets per‑player challenge countdown chip) – acknowledgment only.
+- PTO: modal lists cards for selection; selected card becomes locked and displays lock overlay (LOCK:n) until usable again.
 
 ### Keep It Simple (MVP Boundaries)
 - No animated random selection beyond a quick fade.
 - No persistent assignment UI (atomic completion only).
 - No advanced analytics or replay yet.
+ - Added lightweight replay export (JSON) for logs + seed; no in-app playback yet.
 
 This high-level summary should guide an initial scaffold without over-specifying animations or deep implementation details.
+\n+---\n+\n+## Thematic Feature Catalog (Microsoft-Style Deck)\n+\n+The numeric placeholder features have been replaced by a curated set of 30 thematic features reflecting common Microsoft cloud & productivity scenarios. Total points roughly map to difficulty (3–7). Multi-role features skew higher; three-role cards usually land at 6–7.\n+\n+| ID  | Name                                 | Description (≤ 80 chars)                                       | DEV | PM | UX | Total |\n+|-----|--------------------------------------|-----------------------------------------------------------------|-----|----|----|-------|\n+| F1  | Azure AD Single Sign-On              | Enable tenant SSO via OpenID Connect                            | 3   | 2  | -  | 5     |\n+| F2  | Teams Presence Sync                  | Real-time presence across clients                               | 3   | 2  | 1  | 6     |\n+| F3  | Outlook Add-in Compose Pane          | Add-in panel for AI assisted replies                            | 3   | -  | 1  | 4     |\n+| F4  | SharePoint Document Version Diff     | Visual diff of major document revisions                         | 4   | 2  | 1  | 7     |\n+| F5  | OneDrive Offline Sync Optimization   | Smarter chunking reduces conflicts                              | 4   | 1  | -  | 5     |\n+| F6  | Teams Meeting Live Reactions         | Animated accessible emoji reaction stream                       | 3   | 1  | 2  | 6     |\n+| F7  | Azure Cost Anomaly Alerting          | Detect & notify spend spikes                                    | 3   | 2  | -  | 5     |\n+| F8  | Power BI Dark Theme Polish           | Improve contrast token mapping                                  | 2   | -  | 2  | 4     |\n+| F9  | M365 Unified Search Autosuggest      | Cross-product query suggestions                                 | 4   | 2  | 1  | 7     |\n+| F10 | Azure Functions Cold Start Reduction | Warm pool for premium functions                                 | 5   | 1  | -  | 6     |\n+| F11 | Teams Channel Archive Restore        | Self-service channel restore flow                               | 3   | 2  | -  | 5     |\n+| F12 | Intune Device Compliance Badge       | Device health indicator in portal                               | 2   | 1  | 1  | 4     |\n+| F13 | Azure Monitor Query Snippets         | Reusable tagged Kusto snippets                                  | 3   | 2  | -  | 5     |\n+| F14 | Outlook Calendar Focus Time Block    | Auto-insert focus based on meeting load                         | 3   | 2  | 1  | 6     |\n+| F15 | Edge Collections Sharing             | Share and collaborate on tab groups                             | 3   | 1  | 1  | 5     |\n+| F16 | Azure DevOps Sprint Burnup Chart     | Burnup visualization widget                                     | 2   | 2  | -  | 4     |\n+| F17 | Teams Adaptive Background Blur       | Dynamic blur tuned to motion & light                            | 4   | 1  | 2  | 7     |\n+| F18 | SharePoint Inline Image OCR          | Extract text for indexing                                       | 4   | 2  | -  | 6     |\n+| F19 | Azure Portal Keyboard Shortcuts      | Global resource navigation shortcuts                            | 2   | 1  | 2  | 5     |\n+| F20 | Teams Poll Template Library          | Pre-built poll templates                                        | 2   | 2  | -  | 4     |\n+| F21 | OneDrive Link Expiration Policy      | Policy UI for mandatory expirations                             | 3   | 2  | -  | 5     |\n+| F22 | PowerPoint Live Co-Author Pointer    | Show collaborator pointer live                                  | 3   | 1  | 2  | 6     |\n+| F23 | Azure Role Assignment Audit Export   | Scheduled RBAC diff export                                      | 3   | 2  | -  | 5     |\n+| F24 | Defender Threat Timeline Zoom        | Zoomable incident progression                                   | 4   | 1  | 2  | 7     |\n+| F25 | Teams Message Pinning v2             | Multiple ordered pin slots                                      | 3   | 1  | -  | 4     |\n+| F26 | Azure Backup Restore Progress UI     | Show progress & ETA for restores                                | 3   | 1  | 1  | 5     |\n+| F27 | M365 Data Residency Report           | Export geo storage locations                                    | 2   | 3  | -  | 5     |\n+| F28 | Teams Emoji Skin Tone Memory         | Persist last selected tone                                      | 2   | -  | 1  | 3     |\n+| F29 | Outlook Mobile Attachment Quick Save | One-tap save to recent folder                                   | 3   | -  | 1  | 4     |\n+| F30 | Azure Policy Drift Detection         | Detect & flag resource config drift                             | 4   | 2  | -  | 6     |\n+\n+Balancing notes:\n+- Mixed 1, 2, 3-role distribution encourages collaboration & resource diversity.\n+- High difficulty (≥7) requires either three roles or heavy DEV commitment.\n+- UX appears selectively to keep its scarcity strategically meaningful.\n+\n+Implementation notes:\n+- Backend deck now returns this catalog unless a legacy `size` override is provided.\n+- `FeatureCard.description` (≤140 chars) added & surfaced in serializers and UI.\n+- Frontend `PlayerFeatureCard` displays description under the title.\n+\n+Future extensions:\n+- Add categories (Collaboration, Security, Performance) for event synergies.\n+- Introduce rare epics (Σ 8) plus special scoring modifiers.\n*** End Patch

@@ -1,0 +1,23 @@
+{
+  "name": "silosoft-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.3",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.9.2"
+  },
+  "scripts": {
+    "build": "npm -w backend run build && npm -w frontend run build",
+    "test": "npm -w backend test && npm -w frontend test",
+    "lint": "npm -w backend run lint && npm -w frontend run lint",
+    "dev:backend": "npm -w backend run dev",
+    "dev:frontend": "npm -w frontend run dev",
+    "dev": "concurrently \"npm -w backend run dev\" \"npm -w frontend run dev\""
+  }
+}

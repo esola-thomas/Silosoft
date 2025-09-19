@@ -1,0 +1,93 @@
+openapi: 3.0.3
+info:
+  title: Silosoft Game API
+  version: 0.1.0
+servers:
+  - url: http://localhost:3000
+paths:
+  /game/start:
+    post:
+      summary: Start a new game session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playerCount: { type: integer, minimum: 1, maximum: 4 }
+                seed: { type: string }
+                resourceWeight: { type: integer, minimum: 0, maximum: 100, default: 70 }
+                singleCompletionPerTurn: { type: boolean, default: false }
+                logRetention: { type: integer, minimum: 10, maximum: 1000, default: 100 }
+              required: [playerCount]
+      responses:
+        '200':
+          description: Game created
+  /game/state:
+    get:
+      summary: Get current full game state snapshot
+      responses:
+        '200': { description: State JSON }
+  /turn/action/draw:
+    post:
+      summary: Execute draw phase for active player (idempotent for current turn if already drawn)
+      responses:
+        '200': { description: Draw result }
+  /turn/action/trade:
+    post:
+      summary: Initiate a trade between two players
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fromPlayer: { type: string }
+                toPlayer: { type: string }
+                give: { type: array, items: { type: string } }
+                receive: { type: array, items: { type: string } }
+              required: [fromPlayer, toPlayer]
+      responses:
+        '200': { description: Trade applied }
+  /turn/action/complete:
+    post:
+      summary: Attempt to complete active feature for a player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playerId: { type: string }
+                resourceIds: { type: array, items: { type: string }, minItems: 1 }
+                contractorRoles: { type: object, additionalProperties: { type: string } }
+              required: [playerId, resourceIds]
+      responses:
+        '200': { description: Completion result }
+  /turn/action/pass:
+    post:
+      summary: End current player's action phase
+      responses:
+        '200': { description: Turn ended }
+  /log:
+    get:
+      summary: Retrieve recent action log entries
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 200 }
+      responses:
+        '200': { description: Log entries }
+  /admin/seed:
+    post:
+      summary: Set or reset RNG seed (debug only if game not started)
+      responses:
+        '200': { description: Seed set }
+components:
+  schemas:
+    GameState:
+      type: object
+      properties: { turnNumber: {type: integer}, turnLimit: {type: integer}, completedFeaturesTotal: {type: integer} }

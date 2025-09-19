@@ -49,6 +49,10 @@ pids/
 coverage/
 *.lcov
 .nyc_output
+/.turbo
+/.eslintcache
+backend/build/
+frontend/dist/
 backend/coverage/
 frontend/coverage/
 
