@@ -266,6 +266,15 @@
   gap: 16px;
 }
 
+.spectator-notice {
+  background: #fff8e1;
+  border: 1px solid #ffecb3;
+  color: #8d6e63;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 0.9em;
+}
+
 .game-main {
   min-height: 400px;
 }
@@ -302,6 +311,15 @@
   transition: all 0.2s ease;
 }
 
+.player-card.player-connected {
+  border-color: #4CAF50;
+  background: #f3fff5;
+}
+
+.player-card.player-open {
+  border-style: dashed;
+}
+
 .player-card.current-player {
   border-color: #FF9800;
   background: #fff8f0;
@@ -316,10 +334,60 @@
   margin-bottom: 8px;
 }
 
+.player-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
 .player-name {
   font-weight: 600;
   color: #333;
-  margin-bottom: 4px;
+}
+
+.player-you-badge {
+  background: #1976d2;
+  color: white;
+  border-radius: 12px;
+  padding: 2px 10px;
+  font-size: 0.72em;
+  font-weight: 600;
+}
+
+.player-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.player-status-chip {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: 600;
+}
+
+.player-status-chip.player-status-connected {
+  background: rgba(76, 175, 80, 0.15);
+  color: #1b5e20;
+}
+
+.player-status-chip.player-status-open {
+  background: rgba(158, 158, 158, 0.15);
+  color: #555;
+}
+
+.player-status-chip.player-status-ready {
+  background: rgba(33, 150, 243, 0.15);
+  color: #0d47a1;
+}
+
+.player-status-chip.player-status-not-ready {
+  background: rgba(255, 152, 0, 0.15);
+  color: #e65100;
 }
 
 .player-score {
@@ -331,6 +399,19 @@
 .player-hand-size {
   font-size: 0.85em;
   color: #666;
+}
+
+.player-join-code {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8em;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.join-code-label {
+  font-weight: 600;
 }
 
 .unavailable-resources {
@@ -373,6 +454,51 @@
   background: #2196F3;
   color: white;
   border-color: #2196F3;
+}
+
+.player-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.player-actions-row .view-hand-button {
+  flex: 1;
+  width: auto;
+}
+
+.seat-action-button {
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.seat-action-button.join-seat {
+  background: #1976d2;
+  color: white;
+}
+
+.seat-action-button.join-seat:hover {
+  background: #1565c0;
+}
+
+.seat-action-button.leave-seat {
+  background: #ef5350;
+  color: white;
+}
+
+.seat-action-button.leave-seat:hover {
+  background: #d32f2f;
+}
+
+.seat-action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .hand-controls {
@@ -612,4 +738,11 @@
   .game-sidebar {
     page-break-inside: avoid;
   }
+}
+.player-join-code code {
+  background: #fff;
+  border: 1px dashed #bdbdbd;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
 }

@@ -1,5 +1,81 @@
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
 import apiService from '../services/ApiService';
+
+const SESSION_STORAGE_KEY = 'silosoft:playerSessions';
+const isBrowser = typeof window !== 'undefined';
+
+const readStoredSessions = () => {
+  if (!isBrowser) {
+    return {};
+  }
+
+  try {
+    const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (error) {
+    console.warn('Failed to read stored sessions:', error);
+    return {};
+  }
+};
+
+const writeStoredSessions = (sessions) => {
+  if (!isBrowser) {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessions));
+  } catch (error) {
+    console.warn('Failed to persist session information:', error);
+  }
+};
+
+const savePlayerSessionToStorage = (gameId, session) => {
+  if (!gameId || !session) {
+    return;
+  }
+
+  const sessions = readStoredSessions();
+  sessions[gameId] = session;
+  writeStoredSessions(sessions);
+};
+
+const removePlayerSessionFromStorage = (gameId) => {
+  if (!gameId) {
+    return;
+  }
+
+  const sessions = readStoredSessions();
+  if (sessions[gameId]) {
+    delete sessions[gameId];
+    writeStoredSessions(sessions);
+  }
+};
+
+const getStoredSession = (gameId) => {
+  if (!gameId) {
+    return null;
+  }
+
+  const sessions = readStoredSessions();
+  return sessions[gameId] || null;
+};
+
+const mergePlayerLists = (existingPlayers = [], incomingPlayers = []) => {
+  if (!incomingPlayers || incomingPlayers.length === 0) {
+    return existingPlayers;
+  }
+
+  const existingMap = new Map(existingPlayers.map((player) => [player.id, player]));
+
+  return incomingPlayers.map((player) => {
+    const previous = existingMap.get(player.id) || {};
+    return {
+      ...previous,
+      ...player,
+    };
+  });
+};
 
 /**
  * Game Context for managing global game state
@@ -27,6 +103,7 @@ const initialState = {
 
   // Player-specific
   currentPlayerId: null,
+  playerToken: null,
   isMyTurn: false,
 };
 
@@ -44,6 +121,8 @@ const ACTIONS = {
   SET_SELECTED_CARD: 'SET_SELECTED_CARD',
   SET_DRAGGED_CARD: 'SET_DRAGGED_CARD',
   SET_CURRENT_PLAYER: 'SET_CURRENT_PLAYER',
+  SET_PLAYER_SESSION: 'SET_PLAYER_SESSION',
+  CLEAR_PLAYER_SESSION: 'CLEAR_PLAYER_SESSION',
 };
 
 // Reducer function
@@ -69,51 +148,73 @@ function gameReducer(state, action) {
         error: null,
       };
 
-    case ACTIONS.SET_GAME_STATE:
+    case ACTIONS.SET_GAME_STATE: {
+      const mergedPlayers = mergePlayerLists(state.players, action.payload.players || []);
+      const currentPlayerIndex = typeof action.payload.currentPlayerIndex === 'number'
+        ? action.payload.currentPlayerIndex
+        : state.currentPlayerIndex;
+      const nextGameState = {
+        ...action.payload,
+        players: mergedPlayers,
+      };
+
       return {
         ...state,
         loading: false,
         error: null,
         gameId: action.payload.id,
-        gameState: action.payload,
-        players: action.payload.players || [],
+        gameState: nextGameState,
+        players: mergedPlayers,
         currentRound: action.payload.currentRound || 1,
-        currentPlayerIndex: action.payload.currentPlayerIndex || 0,
+        currentPlayerIndex,
         deck: action.payload.deck || [],
         featuresInPlay: action.payload.featuresInPlay || [],
         gamePhase: action.payload.gamePhase || 'setup',
         winCondition: action.payload.winCondition || false,
-        isMyTurn: state.currentPlayerId && action.payload.players
-          ? action.payload.players[action.payload.currentPlayerIndex]?.id === state.currentPlayerId
+        playerToken: state.playerToken,
+        isMyTurn: state.currentPlayerId && mergedPlayers.length > 0
+          ? mergedPlayers[currentPlayerIndex]?.id === state.currentPlayerId
           : false,
       };
+    }
 
     case ACTIONS.UPDATE_GAME_STATE: {
-      const updatedState = { ...state.gameState, ...action.payload };
+      const existingState = state.gameState || {};
+      const mergedPlayers = mergePlayerLists(existingState.players || state.players, action.payload.players || []);
+      const currentPlayerIndex = typeof action.payload.currentPlayerIndex === 'number'
+        ? action.payload.currentPlayerIndex
+        : (typeof existingState.currentPlayerIndex === 'number'
+          ? existingState.currentPlayerIndex
+          : state.currentPlayerIndex);
+      const nextGameState = {
+        ...existingState,
+        ...action.payload,
+        players: mergedPlayers,
+      };
+
       return {
         ...state,
-        gameState: updatedState,
-        players: updatedState.players || state.players,
-        currentRound: updatedState.currentRound || state.currentRound,
-        currentPlayerIndex: updatedState.currentPlayerIndex !== undefined
-          ? updatedState.currentPlayerIndex
-          : state.currentPlayerIndex,
-        deck: updatedState.deck || state.deck,
-        featuresInPlay: updatedState.featuresInPlay || state.featuresInPlay,
-        gamePhase: updatedState.gamePhase || state.gamePhase,
-        winCondition: updatedState.winCondition !== undefined
-          ? updatedState.winCondition
-          : state.winCondition,
-        isMyTurn: state.currentPlayerId && updatedState.players
-          ? updatedState.players[updatedState.currentPlayerIndex || state.currentPlayerIndex]?.id === state.currentPlayerId
-          : state.isMyTurn,
+        gameState: nextGameState,
+        players: mergedPlayers,
+        currentRound: action.payload.currentRound || existingState.currentRound || state.currentRound,
+        currentPlayerIndex,
+        deck: action.payload.deck || existingState.deck || state.deck,
+        featuresInPlay: action.payload.featuresInPlay || existingState.featuresInPlay || state.featuresInPlay,
+        gamePhase: action.payload.gamePhase || existingState.gamePhase || state.gamePhase,
+        winCondition: action.payload.winCondition !== undefined
+          ? action.payload.winCondition
+          : (existingState.winCondition !== undefined ? existingState.winCondition : state.winCondition),
+        isMyTurn: state.currentPlayerId && mergedPlayers.length > 0
+          ? mergedPlayers[currentPlayerIndex]?.id === state.currentPlayerId
+          : false,
       };
     }
 
     case ACTIONS.RESET_GAME:
       return {
         ...initialState,
-        currentPlayerId: state.currentPlayerId, // Preserve player ID
+        currentPlayerId: state.currentPlayerId,
+        playerToken: state.playerToken,
       };
 
     case ACTIONS.SET_SELECTED_CARD:
@@ -133,6 +234,26 @@ function gameReducer(state, action) {
         ...state,
         currentPlayerId: action.payload,
         isMyTurn: state.players.length > 0 && state.players[state.currentPlayerIndex]?.id === action.payload,
+      };
+
+    case ACTIONS.SET_PLAYER_SESSION: {
+      const { playerId, playerToken } = action.payload || {};
+      return {
+        ...state,
+        currentPlayerId: playerId,
+        playerToken,
+        isMyTurn: state.players.length > 0 && state.players[state.currentPlayerIndex]?.id === playerId,
+      };
+    }
+
+    case ACTIONS.CLEAR_PLAYER_SESSION:
+      return {
+        ...state,
+        currentPlayerId: null,
+        playerToken: null,
+        isMyTurn: false,
+        selectedCard: null,
+        draggedCard: null,
       };
 
     default:
@@ -171,66 +292,69 @@ export function GameProvider({ children }) {
 
       const gameState = await apiService.createGame(playerNames);
       dispatch({ type: ACTIONS.SET_GAME_STATE, payload: gameState });
-
-      // Set current player as first player if not set
-      if (!state.currentPlayerId && gameState.players?.length > 0) {
-        dispatch({ type: ACTIONS.SET_CURRENT_PLAYER, payload: gameState.players[0].id });
-      }
+      dispatch({ type: ACTIONS.CLEAR_PLAYER_SESSION });
+      removePlayerSessionFromStorage(gameState.id);
 
       return gameState;
-    } catch (error) {
-      handleError(error);
-      throw error;
-    }
-  }, [state.currentPlayerId, handleError]);
-
-  // Action: Load existing game state
-  const loadGame = useCallback(async (gameId) => {
-    try {
-      dispatch({ type: ACTIONS.SET_LOADING, payload: true });
-      dispatch({ type: ACTIONS.CLEAR_ERROR });
-
-      const gameState = await apiService.getGameState(gameId);
-      dispatch({ type: ACTIONS.SET_GAME_STATE, payload: gameState });
-
-      return gameState;
-    } catch (error) {
-      handleError(error);
-      throw error;
-    }
-  }, [handleError]);
-
-  // Action: Draw card
-  const drawCard = useCallback(async () => {
-    if (!state.gameId || !state.currentPlayerId) {
-      handleError(new Error('Game ID and Player ID are required'));
-      return;
-    }
-
-    try {
-      dispatch({ type: ACTIONS.SET_LOADING, payload: true });
-      dispatch({ type: ACTIONS.CLEAR_ERROR });
-
-      const result = await apiService.drawCard(state.gameId, state.currentPlayerId);
-
-      // Update game state with the response
-      if (result.gameState) {
-        dispatch({ type: ACTIONS.UPDATE_GAME_STATE, payload: result.gameState });
-      }
-
-      return result;
     } catch (error) {
       handleError(error);
       throw error;
     } finally {
       dispatch({ type: ACTIONS.SET_LOADING, payload: false });
     }
-  }, [state.gameId, state.currentPlayerId, handleError]);
+  }, [handleError]);
 
-  // Action: Assign resource to feature
-  const assignResource = useCallback(async (resourceId, featureId) => {
-    if (!state.gameId || !state.currentPlayerId) {
-      handleError(new Error('Game ID and Player ID are required'));
+  // Action: Load existing game state
+  const loadGame = useCallback(async (gameId, { includeJoinCodes = false } = {}) => {
+    try {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+      dispatch({ type: ACTIONS.CLEAR_ERROR });
+
+      const gameState = await apiService.getGameState(gameId, { includeJoinCodes });
+      dispatch({ type: ACTIONS.SET_GAME_STATE, payload: gameState });
+
+      const storedSession = getStoredSession(gameId);
+
+      if (storedSession?.playerToken) {
+        try {
+          const joinResult = await apiService.joinGame(gameId, {
+            playerId: storedSession.playerId,
+            playerToken: storedSession.playerToken,
+          });
+
+          dispatch({ type: ACTIONS.SET_GAME_STATE, payload: joinResult.gameState });
+          dispatch({
+            type: ACTIONS.SET_PLAYER_SESSION,
+            payload: {
+              playerId: joinResult.playerId,
+              playerToken: joinResult.playerToken,
+            },
+          });
+
+          savePlayerSessionToStorage(gameId, {
+            playerId: joinResult.playerId,
+            playerToken: joinResult.playerToken,
+          });
+        } catch (joinError) {
+          console.warn('Failed to restore player session, clearing stored credentials.', joinError);
+          removePlayerSessionFromStorage(gameId);
+          dispatch({ type: ACTIONS.CLEAR_PLAYER_SESSION });
+        }
+      }
+
+      return gameState;
+    } catch (error) {
+      handleError(error);
+      throw error;
+    } finally {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: false });
+    }
+  }, [handleError]);
+
+  // Action: Draw card
+  const drawCard = useCallback(async () => {
+    if (!state.gameId || !state.currentPlayerId || !state.playerToken) {
+      handleError(new Error('Active player session is required to draw a card'));
       return;
     }
 
@@ -238,11 +362,10 @@ export function GameProvider({ children }) {
       dispatch({ type: ACTIONS.SET_LOADING, payload: true });
       dispatch({ type: ACTIONS.CLEAR_ERROR });
 
-      const result = await apiService.assignResource(
+      const result = await apiService.drawCard(
         state.gameId,
         state.currentPlayerId,
-        resourceId,
-        featureId,
+        state.playerToken,
       );
 
       // Update game state with the response
@@ -257,12 +380,12 @@ export function GameProvider({ children }) {
     } finally {
       dispatch({ type: ACTIONS.SET_LOADING, payload: false });
     }
-  }, [state.gameId, state.currentPlayerId, handleError]);
+  }, [state.gameId, state.currentPlayerId, state.playerToken, handleError]);
 
-  // Action: End turn
-  const endTurn = useCallback(async () => {
-    if (!state.gameId || !state.currentPlayerId) {
-      handleError(new Error('Game ID and Player ID are required'));
+  // Action: Assign resource to feature
+  const assignResource = useCallback(async (resourceId, featureId) => {
+    if (!state.gameId || !state.currentPlayerId || !state.playerToken) {
+      handleError(new Error('Active player session is required to assign resources'));
       return;
     }
 
@@ -270,7 +393,44 @@ export function GameProvider({ children }) {
       dispatch({ type: ACTIONS.SET_LOADING, payload: true });
       dispatch({ type: ACTIONS.CLEAR_ERROR });
 
-      const gameState = await apiService.endTurn(state.gameId, state.currentPlayerId);
+      const result = await apiService.assignResource(
+        state.gameId,
+        state.currentPlayerId,
+        resourceId,
+        featureId,
+        state.playerToken,
+      );
+
+      // Update game state with the response
+      if (result.gameState) {
+        dispatch({ type: ACTIONS.UPDATE_GAME_STATE, payload: result.gameState });
+      }
+
+      return result;
+    } catch (error) {
+      handleError(error);
+      throw error;
+    } finally {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: false });
+    }
+  }, [state.gameId, state.currentPlayerId, state.playerToken, handleError]);
+
+  // Action: End turn
+  const endTurn = useCallback(async () => {
+    if (!state.gameId || !state.currentPlayerId || !state.playerToken) {
+      handleError(new Error('Active player session is required to end a turn'));
+      return;
+    }
+
+    try {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+      dispatch({ type: ACTIONS.CLEAR_ERROR });
+
+      const gameState = await apiService.endTurn(
+        state.gameId,
+        state.currentPlayerId,
+        state.playerToken,
+      );
       dispatch({ type: ACTIONS.UPDATE_GAME_STATE, payload: gameState });
 
       return gameState;
@@ -280,7 +440,121 @@ export function GameProvider({ children }) {
     } finally {
       dispatch({ type: ACTIONS.SET_LOADING, payload: false });
     }
-  }, [state.gameId, state.currentPlayerId, handleError]);
+  }, [state.gameId, state.currentPlayerId, state.playerToken, handleError]);
+
+  // Action: Join or reconnect to a game session
+  const joinGameSession = useCallback(async ({
+    gameId: targetGameId,
+    joinCode,
+    playerId,
+    playerToken,
+    includeJoinCodes = false,
+  } = {}) => {
+    const resolvedGameId = targetGameId || state.gameId;
+
+    if (!resolvedGameId) {
+      handleError(new Error('Game ID is required to join a session'));
+      return null;
+    }
+
+    try {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+      dispatch({ type: ACTIONS.CLEAR_ERROR });
+
+      const result = await apiService.joinGame(resolvedGameId, {
+        joinCode,
+        playerId,
+        playerToken,
+        includeJoinCodes,
+      });
+
+      dispatch({ type: ACTIONS.SET_GAME_STATE, payload: result.gameState });
+      dispatch({
+        type: ACTIONS.SET_PLAYER_SESSION,
+        payload: {
+          playerId: result.playerId,
+          playerToken: result.playerToken,
+        },
+      });
+
+      savePlayerSessionToStorage(result.gameState.id, {
+        playerId: result.playerId,
+        playerToken: result.playerToken,
+      });
+
+      return result;
+    } catch (error) {
+      handleError(error);
+      throw error;
+    } finally {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: false });
+    }
+  }, [state.gameId, handleError]);
+
+  // Action: Toggle ready state during lobby
+  const setPlayerReadyStatus = useCallback(async (isReady = true, options = {}) => {
+    if (!state.gameId || !state.currentPlayerId || !state.playerToken) {
+      handleError(new Error('Active player session is required to update readiness'));
+      return null;
+    }
+
+    try {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+      dispatch({ type: ACTIONS.CLEAR_ERROR });
+
+      const gameState = await apiService.setPlayerReady(
+        state.gameId,
+        state.currentPlayerId,
+        state.playerToken,
+        isReady,
+        options,
+      );
+
+      dispatch({ type: ACTIONS.SET_GAME_STATE, payload: gameState });
+      return gameState;
+    } catch (error) {
+      handleError(error);
+      throw error;
+    } finally {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: false });
+    }
+  }, [state.gameId, state.currentPlayerId, state.playerToken, handleError]);
+
+  // Action: Start the game when all players are ready
+  const startGameSession = useCallback(async (options = {}) => {
+    if (!state.gameId || !state.currentPlayerId || !state.playerToken) {
+      handleError(new Error('Active player session is required to start the game'));
+      return null;
+    }
+
+    try {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+      dispatch({ type: ACTIONS.CLEAR_ERROR });
+
+      const gameState = await apiService.startGame(
+        state.gameId,
+        state.currentPlayerId,
+        state.playerToken,
+        options,
+      );
+
+      dispatch({ type: ACTIONS.SET_GAME_STATE, payload: gameState });
+      return gameState;
+    } catch (error) {
+      handleError(error);
+      throw error;
+    } finally {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: false });
+    }
+  }, [state.gameId, state.currentPlayerId, state.playerToken, handleError]);
+
+  // Action: Leave current session locally
+  const leaveGameSession = useCallback(() => {
+    if (state.gameId) {
+      removePlayerSessionFromStorage(state.gameId);
+    }
+    dispatch({ type: ACTIONS.CLEAR_PLAYER_SESSION });
+  }, [state.gameId]);
 
   // Action: Reset game
   const resetGame = useCallback(() => {
@@ -305,23 +579,38 @@ export function GameProvider({ children }) {
     dispatch({ type: ACTIONS.CLEAR_ERROR });
   }, []);
 
+  useEffect(() => {
+    if (!state.gameId || state.loading) {
+      return undefined;
+    }
+
+    const shouldPoll = state.gamePhase === 'lobby'
+      || (state.gamePhase === 'playing' && (!state.isMyTurn || !state.playerToken));
+
+    if (!shouldPoll) {
+      return undefined;
+    }
+
+    const pollInterval = state.gamePhase === 'lobby' ? 3000 : 5000;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const gameState = await apiService.getGameState(state.gameId);
+        dispatch({ type: ACTIONS.UPDATE_GAME_STATE, payload: gameState });
+      } catch (error) {
+        console.warn('Failed to poll game state:', error);
+      }
+    }, pollInterval);
+
+    return () => clearInterval(intervalId);
+  }, [state.gameId, state.gamePhase, state.isMyTurn, state.playerToken, state.loading]);
+
   // Derived state
   const currentPlayer = state.players[state.currentPlayerIndex] || null;
   const myPlayer = state.players.find((p) => p.id === state.currentPlayerId) || null;
   const deckSize = state.deck.length;
   const isGameActive = state.gamePhase === 'playing';
   const isGameEnded = state.gamePhase === 'ended';
-
-  // DEBUG: Log key game state values that affect draggability
-  console.log('GameContext state:', {
-    isMyTurn: state.isMyTurn,
-    currentPlayerId: state.currentPlayerId,
-    currentPlayerIndex: state.currentPlayerIndex,
-    currentPlayer: currentPlayer ? { id: currentPlayer.id, name: currentPlayer.name } : null,
-    myPlayer: myPlayer ? { id: myPlayer.id, name: myPlayer.name } : null,
-    gamePhase: state.gamePhase,
-    playersCount: state.players.length
-  });
 
   // Context value
   const contextValue = {
@@ -339,6 +628,10 @@ export function GameProvider({ children }) {
     drawCard,
     assignResource,
     endTurn,
+    joinGame: joinGameSession,
+    setPlayerReadyStatus,
+    startGame: startGameSession,
+    leaveGameSession,
     resetGame,
     setCurrentPlayer,
     setSelectedCard,

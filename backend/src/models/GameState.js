@@ -13,22 +13,38 @@ class GameState {
     this.deck = [];
     this.discardPile = [];
     this.featuresInPlay = [];
-    this.gamePhase = 'setup';
+    this.gamePhase = 'lobby';
     this.winCondition = false;
     this.createdAt = new Date().toISOString();
     this.lastAction = null;
     this.maxRounds = 10;
 
     // Initialize players
+    const assignedCodes = new Set();
     playerNames.forEach((name, index) => {
+      const joinCode = GameState.generateJoinCode(assignedCodes);
+      assignedCodes.add(joinCode);
       this.players.push({
         id: `player-${index + 1}`,
         name: name,
         hand: [],
         score: 0,
-        temporarilyUnavailable: []
+        temporarilyUnavailable: [],
+        joinCode,
+        isConnected: false,
+        isReady: false,
+        sessionToken: null,
+        lastSeen: null
       });
     });
+  }
+
+  static generateJoinCode(existingCodes = new Set()) {
+    let code;
+    do {
+      code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    } while (existingCodes.has(code));
+    return code;
   }
 
   static validate(gameData) {
@@ -48,7 +64,7 @@ class GameState {
       throw new Error('Current player index must be valid');
     }
 
-    const validPhases = ['setup', 'playing', 'ended'];
+    const validPhases = ['lobby', 'setup', 'playing', 'ended'];
     if (!validPhases.includes(gameData.gamePhase)) {
       throw new Error(`Game phase must be one of: ${validPhases.join(', ')}`);
     }
@@ -289,9 +305,14 @@ class GameState {
   }
 
   startGame() {
-    if (this.gamePhase !== 'setup') {
-      throw new Error('Game is not in setup phase');
+    if (this.gamePhase !== 'lobby') {
+      throw new Error('Game is not in lobby phase');
     }
+
+    this.players.forEach(player => {
+      player.isReady = false;
+      player.lastSeen = new Date().toISOString();
+    });
 
     this.gamePhase = 'playing';
     this.lastAction = {

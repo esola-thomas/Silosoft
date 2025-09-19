@@ -1,6 +1,6 @@
+const { v4: uuidv4 } = require('uuid');
 const GameState = require('../models/GameState');
 const CardFactory = require('../models/CardFactory');
-const Player = require('../models/Player');
 
 class GameEngine {
   constructor() {
@@ -39,9 +39,6 @@ class GameEngine {
       }
     });
 
-    // Start the game
-    gameState.startGame();
-
     // Store the game
     this.games.set(gameState.id, gameState);
 
@@ -56,20 +53,107 @@ class GameEngine {
     return game;
   }
 
-  drawCard(gameId, playerId) {
+  joinGame(gameId, { joinCode, playerId, playerToken } = {}) {
     const gameState = this.getGame(gameId);
+
+    if (!joinCode && !playerToken) {
+      throw new Error('Join code or existing session token is required');
+    }
+
+    let player = null;
+
+    if (playerToken) {
+      player = gameState.players.find(p => p.sessionToken === playerToken);
+      if (!player) {
+        throw new Error('Invalid player session');
+      }
+
+      if (playerId && player.id !== playerId) {
+        throw new Error('Player session does not match the requested player');
+      }
+
+      this.touchPlayer(player);
+      return { gameState, player, playerToken: player.sessionToken };
+    }
+
+    const normalizedCode = joinCode.trim().toUpperCase();
+    player = gameState.players.find(p => p.joinCode === normalizedCode);
+
+    if (!player) {
+      throw new Error('Invalid join code');
+    }
+
+    const token = uuidv4();
+    player.sessionToken = token;
+    player.isConnected = true;
+    player.isReady = false;
+    this.touchPlayer(player);
+
+    return { gameState, player, playerToken: token };
+  }
+
+  setPlayerReady(gameId, playerId, playerToken, isReady) {
+    const gameState = this.getGame(gameId);
+    const player = this.validatePlayerSession(gameState, playerId, playerToken);
+
+    if (gameState.gamePhase === 'ended') {
+      throw new Error('Game is over');
+    }
+
+    if (gameState.gamePhase === 'playing') {
+      player.isReady = true;
+      return gameState;
+    }
+
+    player.isReady = Boolean(isReady);
+    this.touchPlayer(player);
+
+    this.tryAutoStart(gameState);
+
+    return gameState;
+  }
+
+  startGame(gameId, playerId, playerToken) {
+    const gameState = this.getGame(gameId);
+    const player = this.validatePlayerSession(gameState, playerId, playerToken);
+
+    if (gameState.gamePhase === 'playing') {
+      return gameState;
+    }
+
+    if (gameState.gamePhase === 'ended') {
+      throw new Error('Game is over');
+    }
+
+    if (!this.allPlayersConnected(gameState)) {
+      throw new Error('All players must join before starting the game');
+    }
+
+    if (!this.allPlayersReady(gameState)) {
+      throw new Error('All players must be ready to start the game');
+    }
+
+    player.isReady = true;
+    this.touchPlayer(player);
+
+    gameState.startGame();
+
+    return gameState;
+  }
+
+  drawCard(gameId, playerId, playerToken) {
+    const gameState = this.getGame(gameId);
+    const player = this.validatePlayerSession(gameState, playerId, playerToken);
+
+    this.ensureGameActive(gameState);
 
     const currentPlayer = gameState.getCurrentPlayer();
     if (currentPlayer.id !== playerId) {
-      throw new Error(`Not your turn`);
+      throw new Error('Not your turn');
     }
 
     if (gameState.deck.length === 0) {
       throw new Error('Deck is empty');
-    }
-
-    if (gameState.isGameOver()) {
-      throw new Error('Game is over');
     }
 
     const drawnCard = gameState.drawCard(playerId);
@@ -83,7 +167,6 @@ class GameEngine {
       if (gameState.featuresInPlay.length < 5) {
         gameState.featuresInPlay.push(drawnCard);
         // Remove from player's hand
-        const player = gameState.getPlayerById(playerId);
         const cardIndex = player.hand.findIndex(card => card.id === drawnCard.id);
         if (cardIndex !== -1) {
           player.hand.splice(cardIndex, 1);
@@ -94,22 +177,20 @@ class GameEngine {
     return drawnCard;
   }
 
-  assignResource(gameId, playerId, resourceId, featureId) {
+  assignResource(gameId, playerId, resourceId, featureId, playerToken) {
     const gameState = this.getGame(gameId);
+    const player = this.validatePlayerSession(gameState, playerId, playerToken);
+
+    this.ensureGameActive(gameState);
 
     if (gameState.isGameOver()) {
       throw new Error('Game is over');
     }
 
-    const player = gameState.getPlayerById(playerId);
-    if (!player) {
-      throw new Error(`Player ${playerId} not found`);
-    }
-
     // Check if it's the player's turn
     const currentPlayer = gameState.getCurrentPlayer();
     if (currentPlayer.id !== playerId) {
-      throw new Error(`Not your turn`);
+      throw new Error('Not your turn');
     }
 
     // Find resource in player's hand
@@ -152,8 +233,11 @@ class GameEngine {
     return wasCompleted;
   }
 
-  endTurn(gameId, playerId) {
+  endTurn(gameId, playerId, playerToken) {
     const gameState = this.getGame(gameId);
+    this.validatePlayerSession(gameState, playerId, playerToken);
+
+    this.ensureGameActive(gameState);
 
     if (gameState.isGameOver()) {
       throw new Error('Game is over');
@@ -161,7 +245,7 @@ class GameEngine {
 
     const currentPlayer = gameState.getCurrentPlayer();
     if (currentPlayer.id !== playerId) {
-      throw new Error(`Not your turn`);
+      throw new Error('Not your turn');
     }
 
     gameState.endTurn(playerId);
@@ -172,6 +256,61 @@ class GameEngine {
     }
 
     return gameState;
+  }
+
+  ensureGameActive(gameState) {
+    if (gameState.gamePhase === 'lobby') {
+      throw new Error('Game has not started yet');
+    }
+  }
+
+  validatePlayerSession(gameState, playerId, playerToken) {
+    if (!playerId || !playerToken) {
+      throw new Error('Player ID and session token are required');
+    }
+
+    const player = gameState.getPlayerById(playerId);
+    if (!player) {
+      throw new Error(`Player ${playerId} not found`);
+    }
+
+    if (!player.sessionToken || player.sessionToken !== playerToken) {
+      throw new Error('Invalid player session');
+    }
+
+    this.touchPlayer(player);
+
+    return player;
+  }
+
+  touchPlayer(player) {
+    player.isConnected = true;
+    player.lastSeen = new Date().toISOString();
+  }
+
+  allPlayersConnected(gameState) {
+    return gameState.players.every(player => player.isConnected);
+  }
+
+  allPlayersReady(gameState) {
+    return gameState.players.every(player => player.isReady);
+  }
+
+  tryAutoStart(gameState) {
+    if (gameState.gamePhase !== 'lobby') {
+      return false;
+    }
+
+    if (!this.allPlayersConnected(gameState)) {
+      return false;
+    }
+
+    if (!this.allPlayersReady(gameState)) {
+      return false;
+    }
+
+    gameState.startGame();
+    return true;
   }
 
   processEventCard(gameState, eventCard, playerId) {

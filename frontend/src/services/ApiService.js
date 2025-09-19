@@ -80,12 +80,13 @@ class ApiService {
    * @param {string} gameId - Game session ID
    * @returns {Promise<Object>} Game state object
    */
-  async getGameState(gameId) {
+  async getGameState(gameId, { includeJoinCodes = false } = {}) {
     if (!gameId) {
       throw new Error('Game ID is required');
     }
 
-    const response = await this.apiClient.get(`/games/${gameId}`);
+    const query = includeJoinCodes ? '?includeJoinCodes=true' : '';
+    const response = await this.apiClient.get(`/games/${gameId}${query}`);
     return response.data;
   }
 
@@ -95,13 +96,14 @@ class ApiService {
    * @param {string} playerId - Player ID drawing the card
    * @returns {Promise<Object>} Response with card and updated game state
    */
-  async drawCard(gameId, playerId) {
-    if (!gameId || !playerId) {
-      throw new Error('Game ID and Player ID are required');
+  async drawCard(gameId, playerId, playerToken) {
+    if (!gameId || !playerId || !playerToken) {
+      throw new Error('Game ID, Player ID, and Player Token are required');
     }
 
     const response = await this.apiClient.post(`/games/${gameId}/actions/draw`, {
       playerId,
+      playerToken,
     });
 
     return response.data;
@@ -115,15 +117,16 @@ class ApiService {
    * @param {string} featureId - Feature card ID to assign to
    * @returns {Promise<Object>} Response with assignment result and updated game state
    */
-  async assignResource(gameId, playerId, resourceId, featureId) {
-    if (!gameId || !playerId || !resourceId || !featureId) {
-      throw new Error('Game ID, Player ID, Resource ID, and Feature ID are all required');
+  async assignResource(gameId, playerId, resourceId, featureId, playerToken) {
+    if (!gameId || !playerId || !resourceId || !featureId || !playerToken) {
+      throw new Error('Game ID, Player ID, Resource ID, Feature ID, and Player Token are all required');
     }
 
     const response = await this.apiClient.post(`/games/${gameId}/actions/assign`, {
       playerId,
       resourceId,
       featureId,
+      playerToken,
     });
 
     return response.data;
@@ -135,13 +138,62 @@ class ApiService {
    * @param {string} playerId - Player ID ending their turn
    * @returns {Promise<Object>} Updated game state
    */
-  async endTurn(gameId, playerId) {
-    if (!gameId || !playerId) {
-      throw new Error('Game ID and Player ID are required');
+  async endTurn(gameId, playerId, playerToken) {
+    if (!gameId || !playerId || !playerToken) {
+      throw new Error('Game ID, Player ID, and Player Token are required');
     }
 
     const response = await this.apiClient.post(`/games/${gameId}/actions/end-turn`, {
       playerId,
+      playerToken,
+    });
+
+    return response.data;
+  }
+
+  async joinGame(gameId, { joinCode, playerId, playerToken, includeJoinCodes = false } = {}) {
+    if (!gameId) {
+      throw new Error('Game ID is required to join');
+    }
+
+    if ((!joinCode || joinCode.trim().length === 0) && !playerToken) {
+      throw new Error('Join code or player token is required to join a game');
+    }
+
+    const response = await this.apiClient.post(`/games/${gameId}/join`, {
+      joinCode,
+      playerId,
+      playerToken,
+      includeJoinCodes,
+    });
+
+    return response.data;
+  }
+
+  async setPlayerReady(gameId, playerId, playerToken, isReady = true, { includeJoinCodes = false } = {}) {
+    if (!gameId || !playerId || !playerToken) {
+      throw new Error('Game ID, Player ID, and Player Token are required');
+    }
+
+    const response = await this.apiClient.post(`/games/${gameId}/ready`, {
+      playerId,
+      playerToken,
+      isReady,
+      includeJoinCodes,
+    });
+
+    return response.data;
+  }
+
+  async startGame(gameId, playerId, playerToken, { includeJoinCodes = false } = {}) {
+    if (!gameId || !playerId || !playerToken) {
+      throw new Error('Game ID, Player ID, and Player Token are required');
+    }
+
+    const response = await this.apiClient.post(`/games/${gameId}/start`, {
+      playerId,
+      playerToken,
+      includeJoinCodes,
     });
 
     return response.data;

@@ -15,7 +15,7 @@
 }
 
 .setup-container {
-  max-width: 600px;
+  max-width: 1040px;
   width: 100%;
 }
 
@@ -33,7 +33,14 @@
   font-size: 3rem;
 }
 
-.setup-card {
+.setup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.setup-card,
+.join-card {
   background: white;
   border-radius: 16px;
   padding: 2rem;
@@ -52,7 +59,8 @@
   }
 }
 
-.setup-card h2 {
+.setup-card h2,
+.join-card h2 {
   color: #333;
   margin-bottom: 1rem;
   text-align: center;
@@ -63,6 +71,77 @@
   text-align: center;
   margin-bottom: 2rem;
   line-height: 1.6;
+}
+
+.join-description {
+  color: #666;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.join-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.join-form label {
+  font-weight: 600;
+  color: #555;
+}
+
+.join-form input {
+  padding: 0.75rem;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.join-form input:focus {
+  outline: none;
+  border-color: #764ba2;
+}
+
+.join-actions {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.btn-join-game {
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.9rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  min-width: 150px;
+}
+
+.btn-join-game:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(25, 118, 210, 0.35);
+}
+
+.btn-join-game:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.join-help {
+  background: #f5f8ff;
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: #49618a;
+  line-height: 1.4;
+}
+
+.join-error {
+  margin-bottom: 1rem;
 }
 
 .players-section {
@@ -192,6 +271,12 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .setup-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .game-info {

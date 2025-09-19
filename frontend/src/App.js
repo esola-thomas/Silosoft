@@ -2,15 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { GameProvider, useGame } from './context/GameContext';
 import GameBoard from './components/GameBoard';
+import GameLobby from './components/GameLobby';
 import './App.css';
 
 /**
  * Game Setup Component - Handles initial game configuration
  */
 function GameSetup() {
-  const { createGame, loading, error } = useGame();
+  const { createGame, joinGame, loading, error } = useGame();
   const [playerNames, setPlayerNames] = useState(['', '']);
   const [errors, setErrors] = useState([]);
+  const [joinGameId, setJoinGameId] = useState('');
+  const [joinCode, setJoinCode] = useState('');
+  const [joinError, setJoinError] = useState(null);
 
   const addPlayer = () => {
     if (playerNames.length < 4) {
@@ -70,6 +74,29 @@ function GameSetup() {
     }
   };
 
+  const handleJoinGame = async () => {
+    const trimmedGameId = joinGameId.trim();
+    const trimmedJoinCode = joinCode.trim();
+
+    if (!trimmedGameId || !trimmedJoinCode) {
+      setJoinError('Game ID and join code are required');
+      return;
+    }
+
+    setJoinError(null);
+
+    try {
+      await joinGame({
+        gameId: trimmedGameId,
+        joinCode: trimmedJoinCode,
+        includeJoinCodes: true,
+      });
+    } catch (err) {
+      const message = err?.message || 'Unable to join the game. Please verify the details and try again.';
+      setJoinError(message);
+    }
+  };
+
   return (
     <div className="game-setup">
       <div className="setup-container">
@@ -78,7 +105,8 @@ function GameSetup() {
           Silosoft Digital Card Game
         </h1>
 
-        <div className="setup-card">
+        <div className="setup-grid">
+          <div className="setup-card">
           <h2>Setup New Game</h2>
           <p className="setup-description">
             Create a new cooperative card game session. Work together to complete all features before time runs out!
@@ -171,6 +199,68 @@ function GameSetup() {
             </ul>
           </div>
         </div>
+
+          <div className="join-card">
+            <h2>Join Existing Game</h2>
+            <p className="join-description">
+              Have a game code from your teammate? Enter it here to join the lobby.
+            </p>
+
+            <div className="join-form">
+              <label htmlFor="join-game-id">Game ID</label>
+              <input
+                id="join-game-id"
+                type="text"
+                value={joinGameId}
+                onChange={(e) => setJoinGameId(e.target.value)}
+                placeholder="e.g. 123e4567"
+                disabled={loading}
+              />
+
+              <label htmlFor="join-code">Join Code</label>
+              <input
+                id="join-code"
+                type="text"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                placeholder="6-character code"
+                maxLength={6}
+                disabled={loading}
+              />
+            </div>
+
+            {joinError && (
+              <div className="error-message join-error">❌ {joinError}</div>
+            )}
+
+            {error && (
+              <div className="error-message join-error">❌ {error}</div>
+            )}
+
+            <div className="join-actions">
+              <button
+                onClick={handleJoinGame}
+                disabled={loading}
+                className="btn-join-game"
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner">⏳</span>
+                    Joining...
+                  </>
+                ) : (
+                  'Join Game'
+                )}
+              </button>
+            </div>
+
+            <div className="join-help">
+              <p>
+                Ask the host to share the lobby join codes. You can also reuse this form to switch devices or rejoin if you refresh.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -180,46 +270,33 @@ function GameSetup() {
  * Game Session Component - Wraps the active game with drag and drop
  */
 function GameSession() {
-  const { assignResource, error, myPlayer, featuresInPlay } = useGame();
+  const {
+    assignResource,
+    error,
+    myPlayer,
+    featuresInPlay,
+    gamePhase,
+    playerToken,
+  } = useGame();
 
   const handleDragEnd = async (result) => {
     const { destination, source, draggableId, type } = result;
 
-    // Debug logging to track drag operations
-    console.log('Drag result:', {
-      destination,
-      source,
-      draggableId,
-      type,
-      destinationId: destination?.droppableId,
-      sourceId: source?.droppableId
-    });
+    if (gamePhase !== 'playing' || !playerToken) {
+      return;
+    }
 
-    // No destination or same position
     if (!destination ||
         (destination.droppableId === source.droppableId &&
          destination.index === source.index)) {
-      console.log('Drag cancelled: no destination or same position');
       return;
     }
 
-    // Only handle resource to feature assignments
     if (type !== 'RESOURCE' || !destination.droppableId.startsWith('feature-')) {
-      console.log('Drag rejected: type mismatch or not dropping on feature', {
-        type,
-        expectedType: 'RESOURCE',
-        destinationStartsWithFeature: destination.droppableId.startsWith('feature-'),
-        destinationId: destination.droppableId
-      });
       return;
     }
 
-    // Validate that the source is a player hand
     if (!source.droppableId.startsWith('hand-')) {
-      console.log('Drag rejected: source is not a player hand', {
-        sourceId: source.droppableId,
-        sourceStartsWithHand: source.droppableId.startsWith('hand-')
-      });
       return;
     }
 
@@ -227,10 +304,7 @@ function GameSession() {
       const featureId = destination.droppableId.replace('feature-', '');
       const resourceId = draggableId;
 
-      // Find the resource card being dragged
       const draggedResource = myPlayer?.hand?.find((card) => card.id === resourceId);
-
-      // Find the target feature
       const targetFeature = featuresInPlay?.find((feature) => feature.id === featureId);
 
       if (!draggedResource || !targetFeature) {
@@ -238,7 +312,6 @@ function GameSession() {
         return;
       }
 
-      // Basic client-side validation for better UX
       if (draggedResource.cardType !== 'resource') {
         console.warn('Only resource cards can be assigned to features');
         return;
@@ -249,23 +322,24 @@ function GameSession() {
         return;
       }
 
-      // Log assignment attempt for debugging
-      console.log('Attempting to assign resource:', {
-        resourceId,
-        featureId,
-        resourceRole: draggedResource.role,
-        resourceLevel: draggedResource.level,
-        featureRequirements: targetFeature.requirements,
-        source: source.droppableId,
-        destination: destination.droppableId,
-      });
-
       await assignResource(resourceId, featureId);
-      console.log('Resource assignment successful');
     } catch (err) {
       console.error('Failed to assign resource:', err);
     }
   };
+
+  if (gamePhase === 'lobby') {
+    return (
+      <div className="game-session">
+        {error && (
+          <div className="game-error">
+            ❌ {error}
+          </div>
+        )}
+        <GameLobby />
+      </div>
+    );
+  }
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>

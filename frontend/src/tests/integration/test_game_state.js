@@ -3,44 +3,127 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../../App';
 import { GameProvider } from '../../context/GameContext';
-import ApiService from '../../services/ApiService';
-
-jest.mock('../../services/ApiService');
+import apiService from '../../services/ApiService';
 
 describe('Frontend Game State Management Integration Tests', () => {
-  let mockApiService;
+  let mocks;
 
   beforeEach(() => {
-    mockApiService = {
-      createGame: jest.fn(),
-      getGameState: jest.fn(),
-      drawCard: jest.fn(),
-      assignResource: jest.fn(),
-      endTurn: jest.fn(),
+    mocks = {
+      createGame: jest.spyOn(apiService, 'createGame'),
+      getGameState: jest.spyOn(apiService, 'getGameState'),
+      drawCard: jest.spyOn(apiService, 'drawCard'),
+      assignResource: jest.spyOn(apiService, 'assignResource'),
+      endTurn: jest.spyOn(apiService, 'endTurn'),
+      joinGame: jest.spyOn(apiService, 'joinGame'),
+      setPlayerReady: jest.spyOn(apiService, 'setPlayerReady'),
+      startGame: jest.spyOn(apiService, 'startGame'),
     };
-    ApiService.mockImplementation(() => mockApiService);
+
+    window.localStorage?.clear?.();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
+
+  const buildLobbyGame = (overrides = {}) => ({
+    id: 'game-123',
+    players: [
+      {
+        id: 'p1',
+        name: 'Alice',
+        hand: [],
+        score: 0,
+        temporarilyUnavailable: [],
+        joinCode: 'ALICE1',
+        isConnected: false,
+        isReady: false,
+      },
+      {
+        id: 'p2',
+        name: 'Bob',
+        hand: [],
+        score: 0,
+        temporarilyUnavailable: [],
+        joinCode: 'BOB2',
+        isConnected: false,
+        isReady: false,
+      },
+    ],
+    currentRound: 1,
+    currentPlayerIndex: 0,
+    currentPlayerId: 'p1',
+    gamePhase: 'lobby',
+    featuresInPlay: [],
+    deck: [],
+    deckSize: 0,
+    maxRounds: 10,
+    winCondition: false,
+    isGameOver: false,
+    lastAction: null,
+    createdAt: '2024-01-01T00:00:00Z',
+    ...overrides,
+  });
+
+  const buildPlayingGame = (overrides = {}) => ({
+    ...buildLobbyGame(),
+    gamePhase: 'playing',
+    currentPlayerIndex: 0,
+    currentPlayerId: 'p1',
+    players: [
+      {
+        id: 'p1',
+        name: 'Alice',
+        hand: [],
+        score: 0,
+        temporarilyUnavailable: [],
+        joinCode: 'ALICE1',
+        isConnected: true,
+        isReady: true,
+      },
+      {
+        id: 'p2',
+        name: 'Bob',
+        hand: [],
+        score: 0,
+        temporarilyUnavailable: [],
+        joinCode: 'BOB2',
+        isConnected: true,
+        isReady: true,
+      },
+    ],
+    ...overrides,
+  });
+
+  const joinSeatAndStart = async ({ joinResponse, readyResponse }) => {
+    if (joinResponse) {
+      mocks.joinGame.mockResolvedValueOnce(joinResponse);
+    }
+
+    const joinButton = await screen.findByRole('button', { name: /Join as Alice/i });
+    await userEvent.click(joinButton);
+
+    await waitFor(() => {
+      expect(mocks.joinGame).toHaveBeenCalled();
+    });
+
+    if (readyResponse) {
+      mocks.setPlayerReady.mockResolvedValueOnce(readyResponse);
+
+      const readyButton = await screen.findByRole('button', { name: /Set Ready/i });
+      await userEvent.click(readyButton);
+
+      await waitFor(() => {
+        expect(mocks.setPlayerReady).toHaveBeenCalled();
+      });
+    }
+  };
 
   describe('Game initialization', () => {
     it('should create a new game with player names', async () => {
-      const mockGame = {
-        id: 'game-123',
-        players: [
-          { id: 'p1', name: 'Alice', hand: [], score: 0 },
-          { id: 'p2', name: 'Bob', hand: [], score: 0 },
-        ],
-        currentRound: 1,
-        currentPlayerIndex: 0,
-        gamePhase: 'playing',
-        featuresInPlay: [],
-        deck: [],
-      };
-
-      mockApiService.createGame.mockResolvedValue(mockGame);
+      const lobbyGame = buildLobbyGame({ id: 'game-123' });
+      mocks.createGame.mockResolvedValue(lobbyGame);
 
       render(
         <GameProvider>
@@ -57,11 +140,11 @@ describe('Frontend Game State Management Integration Tests', () => {
       await userEvent.click(startButton);
 
       await waitFor(() => {
-        expect(mockApiService.createGame).toHaveBeenCalledWith(['Alice', 'Bob']);
+        expect(mocks.createGame).toHaveBeenCalledWith(['Alice', 'Bob']);
       });
 
-      expect(screen.getByText(/alice/i)).toBeInTheDocument();
-      expect(screen.getByText(/bob/i)).toBeInTheDocument();
+      expect(screen.getByText(/game lobby/i)).toBeInTheDocument();
+      expect(screen.getByText(/Join Code/i)).toBeInTheDocument();
     });
 
     it('should validate player count constraints', async () => {
@@ -75,35 +158,44 @@ describe('Frontend Game State Management Integration Tests', () => {
 
       await userEvent.click(startButton);
 
-      expect(screen.getByText(/2-4 players required/i)).toBeInTheDocument();
-      expect(mockApiService.createGame).not.toHaveBeenCalled();
+      expect(screen.getByText(/Player 1 name is required/i)).toBeInTheDocument();
+      expect(mocks.createGame).not.toHaveBeenCalled();
     });
 
     it('should display initial game state after creation', async () => {
-      const mockGame = {
+      const lobbyGame = buildLobbyGame({ id: 'game-456' });
+
+      const lobbyAfterJoin = {
+        ...lobbyGame,
+        players: [
+          { ...lobbyGame.players[0], isConnected: true },
+          lobbyGame.players[1],
+        ],
+      };
+
+      const playingGame = buildPlayingGame({
         id: 'game-456',
+        deck: Array(30).fill({ cardType: 'resource' }),
+        deckSize: 30,
         players: [
           {
-            id: 'p1',
-            name: 'Alice',
+            ...lobbyGame.players[0],
+            isConnected: true,
+            isReady: true,
             hand: [
               { id: 'c1', cardType: 'resource', role: 'dev', level: 'senior', value: 3 },
               { id: 'c2', cardType: 'feature', name: 'Login', points: 3 },
             ],
-            score: 0,
           },
           {
-            id: 'p2',
-            name: 'Bob',
+            ...lobbyGame.players[1],
+            isConnected: true,
+            isReady: true,
             hand: [
               { id: 'c3', cardType: 'resource', role: 'pm', level: 'junior', value: 2 },
             ],
-            score: 0,
           },
         ],
-        currentRound: 1,
-        currentPlayerIndex: 0,
-        gamePhase: 'playing',
         featuresInPlay: [
           {
             id: 'f1',
@@ -114,11 +206,9 @@ describe('Frontend Game State Management Integration Tests', () => {
             completed: false,
           },
         ],
-        deck: Array(30).fill({ cardType: 'resource' }),
-      };
+      });
 
-      mockApiService.createGame.mockResolvedValue(mockGame);
-      mockApiService.getGameState.mockResolvedValue(mockGame);
+      mocks.createGame.mockResolvedValue(lobbyGame);
 
       render(
         <GameProvider>
@@ -134,29 +224,56 @@ describe('Frontend Game State Management Integration Tests', () => {
       await userEvent.type(player2Input, 'Bob');
       await userEvent.click(startButton);
 
+      await joinSeatAndStart({
+        joinResponse: {
+          playerId: 'p1',
+          playerName: 'Alice',
+          playerToken: 'token-p1',
+          gameState: lobbyAfterJoin,
+        },
+        readyResponse: playingGame,
+      });
+
       await waitFor(() => {
-        expect(screen.getByText(/round 1/i)).toBeInTheDocument();
-        expect(screen.getByText(/alice's turn/i)).toBeInTheDocument();
-        expect(screen.getByText(/dashboard/i)).toBeInTheDocument();
-        expect(screen.getByText(/30 cards/i)).toBeInTheDocument();
+        expect(screen.getByText(/Round 1\/10/i)).toBeInTheDocument();
+        expect(screen.getByText(/Current Turn/i)).toHaveTextContent('Alice');
+        expect(screen.getByText(/Dashboard/i)).toBeInTheDocument();
+        expect(screen.getByText(/30 cards left/i)).toBeInTheDocument();
       });
     });
   });
 
   describe('Turn actions', () => {
     it('should handle draw card action', async () => {
-      const initialGame = {
-        id: 'game-789',
+      const lobbyGame = buildLobbyGame({ id: 'game-789' });
+      const lobbyAfterJoin = {
+        ...lobbyGame,
         players: [
-          { id: 'p1', name: 'Alice', hand: [], score: 0 },
-          { id: 'p2', name: 'Bob', hand: [], score: 0 },
+          { ...lobbyGame.players[0], isConnected: true },
+          lobbyGame.players[1],
         ],
-        currentRound: 1,
-        currentPlayerIndex: 0,
-        gamePhase: 'playing',
-        featuresInPlay: [],
-        deck: Array(40).fill({}),
       };
+
+      const playingGame = buildPlayingGame({
+        id: 'game-789',
+        deck: Array(40).fill({}),
+        deckSize: 40,
+        players: [
+          {
+            ...lobbyGame.players[0],
+            isConnected: true,
+            isReady: true,
+            hand: [],
+          },
+          {
+            ...lobbyGame.players[1],
+            isConnected: true,
+            isReady: true,
+            hand: [],
+          },
+        ],
+        featuresInPlay: [],
+      });
 
       const drawnCard = {
         id: 'c10',
@@ -166,17 +283,21 @@ describe('Frontend Game State Management Integration Tests', () => {
         value: 3,
       };
 
-      const updatedGame = {
-        ...initialGame,
-        players: [
-          { ...initialGame.players[0], hand: [drawnCard] },
-          initialGame.players[1],
-        ],
+      const postDrawState = {
+        ...playingGame,
         deck: Array(39).fill({}),
+        deckSize: 39,
+        players: [
+          {
+            ...playingGame.players[0],
+            hand: [drawnCard],
+          },
+          playingGame.players[1],
+        ],
       };
 
-      mockApiService.createGame.mockResolvedValue(initialGame);
-      mockApiService.drawCard.mockResolvedValue({ card: drawnCard, gameState: updatedGame });
+      mocks.createGame.mockResolvedValue(lobbyGame);
+      mocks.drawCard.mockResolvedValue({ card: drawnCard, gameState: postDrawState });
 
       render(
         <GameProvider>
@@ -190,17 +311,23 @@ describe('Frontend Game State Management Integration Tests', () => {
       await userEvent.type(player2Input, 'Bob');
       await userEvent.click(screen.getByText(/start game/i));
 
-      await waitFor(() => {
-        expect(screen.getByText(/alice's turn/i)).toBeInTheDocument();
+      await joinSeatAndStart({
+        joinResponse: {
+          playerId: 'p1',
+          playerName: 'Alice',
+          playerToken: 'token-p1',
+          gameState: lobbyAfterJoin,
+        },
+        readyResponse: playingGame,
       });
 
       const drawButton = screen.getByText(/draw card/i);
       await userEvent.click(drawButton);
 
       await waitFor(() => {
-        expect(mockApiService.drawCard).toHaveBeenCalledWith('game-789', 'p1');
-        expect(screen.getByText(/senior developer/i)).toBeInTheDocument();
-        expect(screen.getByText(/39 cards/i)).toBeInTheDocument();
+        expect(mocks.drawCard).toHaveBeenCalledWith('game-789', 'p1', 'token-p1');
+        expect(screen.getByText(/dev - senior/i)).toBeInTheDocument();
+        expect(screen.getByText(/39 cards left/i)).toBeInTheDocument();
       });
     });
 

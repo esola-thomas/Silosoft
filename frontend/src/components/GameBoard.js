@@ -24,10 +24,14 @@ const GameBoard = memo(() => {
     isMyTurn,
     loading,
     error,
+    playerToken,
+    currentPlayerId,
     // Actions
     drawCard,
     endTurn,
     clearError,
+    joinGame,
+    leaveGameSession,
   } = useGame();
 
   const [showAllHands, setShowAllHands] = useState(false);
@@ -38,8 +42,10 @@ const GameBoard = memo(() => {
   React.useEffect(() => {
     if (myPlayer && !selectedPlayer) {
       setSelectedPlayer(myPlayer.id);
+    } else if (!myPlayer && !selectedPlayer && players.length > 0) {
+      setSelectedPlayer(players[0].id);
     }
-  }, [myPlayer, selectedPlayer]);
+  }, [myPlayer, selectedPlayer, players]);
 
 
   // Handle draw card action
@@ -147,40 +153,89 @@ const GameBoard = memo(() => {
     <div className="scoreboard">
       <h3 className="scoreboard-title">Players</h3>
       <div className="player-list">
-        {players.map((player) => (
-          <div
-            key={player.id}
-            className={`player-card ${
-              currentPlayer?.id === player.id ? 'current-player' : ''
-            } ${myPlayer?.id === player.id ? 'my-player' : ''}`}
-          >
-            <div className="player-info">
-              <div className="player-name">{player.name}</div>
-              <div className="player-score">{player.score} points</div>
-              <div className="player-hand-size">{player.hand?.length || 0} cards</div>
-            </div>
+        {players.map((player) => {
+          const isCurrent = currentPlayer?.id === player.id;
+          const isMine = currentPlayerId === player.id;
+          const canJoinSeat = !player.isConnected && Boolean(player.joinCode);
 
-            {player.temporarilyUnavailable?.length > 0 && (
-              <div className="unavailable-resources">
-                <div className="unavailable-label">Unavailable:</div>
-                <div className="unavailable-count">
-                  {player.temporarilyUnavailable.length} resources
-                </div>
-              </div>
-            )}
-
-            <button
-              className={`view-hand-button ${
-                selectedPlayer === player.id ? 'selected' : ''
-              }`}
-              onClick={() => setSelectedPlayer(
-                selectedPlayer === player.id ? null : player.id,
-              )}
+          return (
+            <div
+              key={player.id}
+              className={`player-card ${
+                isCurrent ? 'current-player' : ''
+              } ${isMine ? 'my-player' : ''} ${player.isConnected ? 'player-connected' : 'player-open'}`}
             >
-              {selectedPlayer === player.id ? 'Hide Hand' : 'View Hand'}
-            </button>
-          </div>
-        ))}
+              <div className="player-info">
+                <div className="player-name-row">
+                  <span className="player-name">{player.name}</span>
+                  {isMine && <span className="player-you-badge">You</span>}
+                </div>
+                <div className="player-score">{player.score} points</div>
+                <div className="player-hand-size">{player.hand?.length || 0} cards</div>
+              </div>
+
+              <div className="player-status-row">
+                <span className={`player-status-chip ${player.isConnected ? 'player-status-connected' : 'player-status-open'}`}>
+                  {player.isConnected ? 'Connected' : 'Open Seat'}
+                </span>
+                {gamePhase === 'lobby' && (
+                  <span className={`player-status-chip ${player.isReady ? 'player-status-ready' : 'player-status-not-ready'}`}>
+                    {player.isReady ? 'Ready' : 'Not Ready'}
+                  </span>
+                )}
+              </div>
+
+              {player.joinCode && (
+                <div className="player-join-code">
+                  <span className="join-code-label">Join Code:</span>
+                  <code>{player.joinCode}</code>
+                </div>
+              )}
+
+              {player.temporarilyUnavailable?.length > 0 && (
+                <div className="unavailable-resources">
+                  <div className="unavailable-label">Unavailable:</div>
+                  <div className="unavailable-count">
+                    {player.temporarilyUnavailable.length} resources
+                  </div>
+                </div>
+              )}
+
+              <div className="player-actions-row">
+                <button
+                  className={`view-hand-button ${
+                    selectedPlayer === player.id ? 'selected' : ''
+                  }`}
+                  onClick={() => setSelectedPlayer(
+                    selectedPlayer === player.id ? null : player.id,
+                  )}
+                >
+                  {selectedPlayer === player.id ? 'Hide Hand' : 'View Hand'}
+                </button>
+
+                {isMine ? (
+                  <button
+                    className="seat-action-button leave-seat"
+                    onClick={leaveGameSession}
+                    disabled={loading}
+                  >
+                    Leave Seat
+                  </button>
+                ) : canJoinSeat ? (
+                  <button
+                    className="seat-action-button join-seat"
+                    onClick={async () => {
+                      await joinGame({ joinCode: player.joinCode, includeJoinCodes: true });
+                    }}
+                    disabled={loading}
+                  >
+                    Join Seat
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="hand-controls">
@@ -193,6 +248,18 @@ const GameBoard = memo(() => {
       </div>
     </div>
   );
+
+  const renderSpectatorNotice = () => {
+    if (playerToken) {
+      return null;
+    }
+
+    return (
+      <div className="spectator-notice">
+        You are currently spectating. Join an open seat to take turns with the team.
+      </div>
+    );
+  };
 
   // Render player hands
   const renderPlayerHands = () => {
@@ -330,6 +397,7 @@ const GameBoard = memo(() => {
       <div className="game-content">
         {/* Left column: Scoreboard and controls */}
         <div className="game-sidebar">
+          {renderSpectatorNotice()}
           {renderScoreboard()}
         </div>
 

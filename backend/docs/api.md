@@ -317,19 +317,35 @@ Creates a new game session with 2-4 players.
         }
       ],
       "score": 0,
-      "temporarilyUnavailable": []
+      "temporarilyUnavailable": [],
+      "joinCode": "Q8Z4M1",
+      "isConnected": false,
+      "isReady": false
+    },
+    {
+      "id": "player-2",
+      "name": "Bob",
+      "hand": [],
+      "score": 0,
+      "temporarilyUnavailable": [],
+      "joinCode": "D3K7LP",
+      "isConnected": false,
+      "isReady": false
     }
   ],
-  "gamePhase": "playing",
+  "gamePhase": "lobby",
   "currentRound": 1,
   "currentPlayerIndex": 0,
-  "currentPlayer": "player-1",
+  "currentPlayerId": "player-1",
   "featuresInPlay": [],
   "deckSize": 35,
   "maxRounds": 10,
   "winCondition": false,
   "isGameOver": false,
-  "lastAction": null,
+  "lastAction": {
+    "type": "game_created",
+    "timestamp": "2024-01-15T10:00:00Z"
+  },
   "createdAt": "2024-01-15T10:00:00Z"
 }
 ```
@@ -349,15 +365,33 @@ Retrieves the current state of a game.
 **Path Parameters:**
 - `gameId` (string, required): The unique game identifier
 
+**Query Parameters (optional):**
+- `includeJoinCodes` (boolean): When `true`, the response includes per-player join codes and lobby readiness metadata.
+
 **Response (200 OK):**
 ```json
 {
   "id": "game-uuid-123",
-  "players": [...],
+  "players": [
+    {
+      "id": "player-1",
+      "name": "Alice",
+      "hand": [/* ... */],
+      "score": 6,
+      "temporarilyUnavailable": [],
+      "joinCode": "Q8Z4M1",
+      "isConnected": true,
+      "isReady": false
+    }
+  ],
   "gamePhase": "playing",
   "currentRound": 3,
   "currentPlayerIndex": 1,
-  "currentPlayer": "player-2",
+  "currentPlayer": {
+    "id": "player-2",
+    "name": "Bob",
+    "hand": [/* ... */]
+  },
   "featuresInPlay": [
     {
       "id": "f04",
@@ -385,6 +419,96 @@ Retrieves the current state of a game.
   "createdAt": "2024-01-15T10:00:00Z"
 }
 ```
+
+---
+
+#### Join Game Lobby
+
+**POST** `/api/v1/games/{gameId}/join`
+
+Claims a seat in the lobby using a join code or reconnects an existing player session using a stored player token.
+
+**Request Body (Join with code):**
+```json
+{
+  "joinCode": "Q8Z4M1"
+}
+```
+
+**Request Body (Reconnect with token):**
+```json
+{
+  "playerId": "player-1",
+  "playerToken": "8d2a4c52-b94c-4c2b-9c24-ef50779c4ad0"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "playerId": "player-1",
+  "playerName": "Alice",
+  "playerToken": "8d2a4c52-b94c-4c2b-9c24-ef50779c4ad0",
+  "gameState": {
+    "id": "game-uuid-123",
+    "players": [/* ... */],
+    "gamePhase": "lobby",
+    "currentRound": 1,
+    "currentPlayerIndex": 0
+  }
+}
+```
+
+**Common Errors:**
+- `400 Bad Request` — Missing join code or token
+- `401 Unauthorized` — Invalid session token
+- `404 Not Found` — Game or join code not found
+
+---
+
+#### Set Player Ready State
+
+**POST** `/api/v1/games/{gameId}/ready`
+
+Marks the authenticated player as ready (or not ready) while the game is in the lobby phase. Once all connected players are ready the game will start automatically.
+
+**Request Body:**
+```json
+{
+  "playerId": "player-1",
+  "playerToken": "8d2a4c52-b94c-4c2b-9c24-ef50779c4ad0",
+  "isReady": true
+}
+```
+
+**Response (200 OK):** Updated game state reflecting the new readiness status.
+
+**Common Errors:**
+- `400 Bad Request` — Invalid or missing payload
+- `401 Unauthorized` — Session token mismatch
+- `409 Conflict` — Game already started or ended
+
+---
+
+#### Start Game
+
+**POST** `/api/v1/games/{gameId}/start`
+
+Starts the game once all players have joined and are ready. This endpoint is optional—games will auto-start when everyone is ready, but hosts can call it to enforce a manual start.
+
+**Request Body:**
+```json
+{
+  "playerId": "player-1",
+  "playerToken": "8d2a4c52-b94c-4c2b-9c24-ef50779c4ad0"
+}
+```
+
+**Response (200 OK):** Updated game state with `gamePhase` set to `playing`.
+
+**Common Errors:**
+- `401 Unauthorized` — Session token mismatch
+- `409 Conflict` — Players missing or not all ready
 
 **Error Responses:**
 - `404 Not Found` - Game not found
