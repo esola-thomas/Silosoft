@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from 'react';
-import { Droppable } from 'react-beautiful-dnd';
+import { Droppable } from '@hello-pangea/dnd';
 import { useGame } from '../context/GameContext';
 import Card from './Card';
 import './FeatureDisplay.css';
@@ -14,11 +14,11 @@ const FeatureDisplay = memo(({
   interactive = true,
   layout = 'grid', // grid, list, compact
 }) => {
-  const { assignResource, isMyTurn, loading } = useGame();
+  const { isMyTurn, loading } = useGame();
 
   // Calculate completion status for each feature
   const featuresWithStatus = useMemo(() => {
-    return (features || []).filter(feature => feature != null).map(feature => {
+    return (features || []).filter((feature) => feature !== null).map((feature) => {
       const assigned = feature.assignedResources || [];
       const requirements = feature.requirements || {};
 
@@ -47,20 +47,20 @@ const FeatureDisplay = memo(({
     });
   }, [features]);
 
-  // Handle resource drop
-  const handleResourceDrop = async (featureId, resourceId) => {
-    if (!isMyTurn || loading) {
-      return false;
-    }
+  // Handle resource drop - currently unused but available for drag/drop functionality
+  // const handleResourceDrop = async (featureId, resourceId) => {
+  //   if (!isMyTurn || loading) {
+  //     return false;
+  //   }
 
-    try {
-      await assignResource(resourceId, featureId);
-      return true;
-    } catch (error) {
-      console.error('Failed to assign resource:', error);
-      return false;
-    }
-  };
+  //   try {
+  //     await assignResource(resourceId, featureId);
+  //     return true;
+  //   } catch (error) {
+  //     console.error('Failed to assign resource:', error);
+  //     return false;
+  //   }
+  // };
 
   // Render requirement progress bar
   const renderRequirementProgress = (feature) => {
@@ -145,11 +145,13 @@ const FeatureDisplay = memo(({
       return null;
     }
 
+    const isDropDisabled = !isMyTurn || loading || feature.completed || feature.isComplete;
+
     return (
       <Droppable
         droppableId={`feature-${feature.id}`}
         type="RESOURCE"
-        isDropDisabled={!isMyTurn || loading || feature.completed}
+        isDropDisabled={isDropDisabled}
       >
         {(provided, snapshot) => (
           <div
@@ -157,7 +159,7 @@ const FeatureDisplay = memo(({
             {...provided.droppableProps}
             className={`feature-drop-zone ${
               snapshot.isDraggingOver ? 'drop-zone-active' : ''
-            } ${!isMyTurn || loading ? 'drop-zone-disabled' : ''}`}
+            } ${isDropDisabled ? 'drop-zone-disabled' : ''}`}
           >
             {snapshot.isDraggingOver ? (
               <div className="drop-zone-indicator">
@@ -165,7 +167,15 @@ const FeatureDisplay = memo(({
               </div>
             ) : (
               <div className="drop-zone-hint">
-                {isMyTurn && !loading ? 'Drag resources here' : 'Not your turn'}
+                {(() => {
+                  if (isMyTurn && !loading && !feature.isComplete) {
+                    return 'Drag resources here';
+                  }
+                  if (feature.isComplete) {
+                    return 'Feature completed';
+                  }
+                  return 'Not your turn';
+                })()}
               </div>
             )}
             {provided.placeholder}
@@ -210,7 +220,7 @@ const FeatureDisplay = memo(({
                   r="15"
                   style={{
                     strokeDasharray: `${2 * Math.PI * 15}`,
-                    strokeDashoffset: `${2 * Math.PI * 15 * (1 - feature.progress / 100)}`
+                    strokeDashoffset: `${2 * Math.PI * 15 * (1 - feature.progress / 100)}`,
                   }}
                 />
               </svg>
@@ -259,9 +269,9 @@ const FeatureDisplay = memo(({
         <h3 className="feature-display-title">
           Features in Play ({features.length})
         </h3>
-        {featuresWithStatus.filter(f => f.isComplete).length > 0 && (
+        {featuresWithStatus.filter((f) => f.isComplete).length > 0 && (
           <div className="completion-summary">
-            {featuresWithStatus.filter(f => f.isComplete).length} of {features.length} completed
+            {featuresWithStatus.filter((f) => f.isComplete).length} of {features.length} completed
           </div>
         )}
       </div>

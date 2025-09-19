@@ -1,8 +1,9 @@
-import React, { memo, useEffect, useState } from 'react';
-import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import React, { memo, useState } from 'react';
+import { Droppable } from '@hello-pangea/dnd';
 import { useGame } from '../context/GameContext';
 import Card from './Card';
 import FeatureDisplay from './FeatureDisplay';
+import GameRules from './GameRules';
 import './GameBoard.css';
 
 /**
@@ -25,55 +26,27 @@ const GameBoard = memo(() => {
     error,
     // Actions
     drawCard,
-    assignResource,
     endTurn,
     clearError,
   } = useGame();
 
   const [showAllHands, setShowAllHands] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [showRules, setShowRules] = useState(false);
 
   // Auto-select current player when it changes
-  useEffect(() => {
+  React.useEffect(() => {
     if (myPlayer && !selectedPlayer) {
       setSelectedPlayer(myPlayer.id);
     }
   }, [myPlayer, selectedPlayer]);
 
-  // Handle drag end for resource assignment
-  const handleDragEnd = async (result) => {
-    const { destination, source, draggableId } = result;
-
-    // Dropped outside of a droppable area
-    if (!destination) {
-      return;
-    }
-
-    // Dropped in the same position
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
-
-    // Only handle resource to feature assignments
-    if (destination.droppableId.startsWith('feature-')) {
-      const featureId = destination.droppableId.replace('feature-', '');
-      const resourceId = draggableId;
-
-      try {
-        await assignResource(resourceId, featureId);
-      } catch (error) {
-        console.error('Failed to assign resource:', error);
-        // Error is handled by the context
-      }
-    }
-  };
 
   // Handle draw card action
   const handleDrawCard = async () => {
-    if (!isMyTurn || loading) return;
+    if (!isMyTurn || loading) {
+      return;
+    }
 
     try {
       await drawCard();
@@ -84,7 +57,9 @@ const GameBoard = memo(() => {
 
   // Handle end turn action
   const handleEndTurn = async () => {
-    if (!isMyTurn || loading) return;
+    if (!isMyTurn || loading) {
+      return;
+    }
 
     try {
       await endTurn();
@@ -99,7 +74,7 @@ const GameBoard = memo(() => {
       return players;
     }
     const targetPlayer = selectedPlayer
-      ? players.find(p => p.id === selectedPlayer)
+      ? players.find((p) => p.id === selectedPlayer)
       : myPlayer;
     return targetPlayer ? [targetPlayer] : [];
   };
@@ -138,6 +113,13 @@ const GameBoard = memo(() => {
 
       {/* Game controls */}
       <div className="game-controls">
+        <button
+          className="control-button rules-button"
+          onClick={() => setShowRules(true)}
+          aria-label="Show game rules"
+        >
+          📋 Rules
+        </button>
         {isMyTurn && gamePhase === 'playing' && (
           <>
             <button
@@ -165,7 +147,7 @@ const GameBoard = memo(() => {
     <div className="scoreboard">
       <h3 className="scoreboard-title">Players</h3>
       <div className="player-list">
-        {players.map((player, index) => (
+        {players.map((player) => (
           <div
             key={player.id}
             className={`player-card ${
@@ -192,7 +174,7 @@ const GameBoard = memo(() => {
                 selectedPlayer === player.id ? 'selected' : ''
               }`}
               onClick={() => setSelectedPlayer(
-                selectedPlayer === player.id ? null : player.id
+                selectedPlayer === player.id ? null : player.id,
               )}
             >
               {selectedPlayer === player.id ? 'Hide Hand' : 'View Hand'}
@@ -225,78 +207,80 @@ const GameBoard = memo(() => {
     }
 
     return (
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="player-hands">
-          {displayedPlayers.map((player) => (
-            <div key={player.id} className="player-hand-section">
-              <div className="hand-header">
-                <h4 className="hand-title">
-                  {player.name}'s Hand ({player.hand?.length || 0} cards)
-                  {myPlayer?.id === player.id && <span className="my-hand-badge">You</span>}
-                </h4>
-              </div>
+      <div className="player-hands">
+        {displayedPlayers.map((player) => (
+          <div key={player.id} className="player-hand-section">
+            <div className="hand-header">
+              <h4 className="hand-title">
+                {player.name}&apos;s Hand ({player.hand?.length || 0} cards)
+                {myPlayer?.id === player.id && <span className="my-hand-badge">You</span>}
+              </h4>
+            </div>
 
-              <Droppable droppableId={`hand-${player.id}`} direction="horizontal">
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={`hand-container ${
-                      snapshot.isDraggingOver ? 'hand-drag-over' : ''
-                    }`}
-                  >
-                    {player.hand && player.hand.length > 0 ? (
-                      player.hand.map((card, index) => (
+            <Droppable droppableId={`hand-${player.id}`} direction="horizontal" type="RESOURCE">
+              {(provided, snapshot) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className={`hand-container ${
+                    snapshot.isDraggingOver ? 'hand-drag-over' : ''
+                  }`}
+                >
+                  {player.hand && player.hand.length > 0 ? (
+                    player.hand.map((card, index) => {
+                      const isDraggableCondition = isMyTurn &&
+                        myPlayer?.id === player.id &&
+                        card.cardType === 'resource' &&
+                        !card.unavailableUntil;
+
+                      return (
                         <Card
                           key={card.id}
                           card={card}
                           index={index}
-                          isDraggable={
-                            isMyTurn &&
-                            myPlayer?.id === player.id &&
-                            card.cardType === 'resource' &&
-                            !card.unavailableUntil
-                          }
+                          isDraggable={isDraggableCondition}
                           isInHand={true}
                           isUnavailable={!!card.unavailableUntil}
                           size="normal"
                         />
-                      ))
-                    ) : (
-                      <div className="empty-hand">No cards in hand</div>
-                    )}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-
-              {/* Show temporarily unavailable resources */}
-              {player.temporarilyUnavailable?.length > 0 && (
-                <div className="unavailable-section">
-                  <h5 className="unavailable-title">Temporarily Unavailable</h5>
-                  <div className="unavailable-cards">
-                    {player.temporarilyUnavailable.map((resource, index) => (
-                      <Card
-                        key={resource.id || index}
-                        card={resource}
-                        size="small"
-                        isDraggable={false}
-                        isUnavailable={true}
-                      />
-                    ))}
-                  </div>
+                      );
+                    })
+                  ) : (
+                    <div className="empty-hand">No cards in hand</div>
+                  )}
+                  {provided.placeholder}
                 </div>
               )}
-            </div>
-          ))}
-        </div>
-      </DragDropContext>
+            </Droppable>
+
+            {/* Show temporarily unavailable resources */}
+            {player.temporarilyUnavailable?.length > 0 && (
+              <div className="unavailable-section">
+                <h5 className="unavailable-title">Temporarily Unavailable</h5>
+                <div className="unavailable-cards">
+                  {player.temporarilyUnavailable.map((resource, index) => (
+                    <Card
+                      key={resource.id || index}
+                      card={resource}
+                      size="small"
+                      isDraggable={false}
+                      isUnavailable={true}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     );
   };
 
   // Render error message
   const renderError = () => {
-    if (!error) return null;
+    if (!error) {
+      return null;
+    }
 
     return (
       <div className="game-error">
@@ -364,6 +348,12 @@ const GameBoard = memo(() => {
       <div className="game-hands">
         {renderPlayerHands()}
       </div>
+
+      {/* Game Rules Modal */}
+      <GameRules
+        isOpen={showRules}
+        onClose={() => setShowRules(false)}
+      />
     </div>
   );
 });

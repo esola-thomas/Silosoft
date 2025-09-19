@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import apiService from '../services/ApiService';
 
 /**
@@ -88,7 +88,7 @@ function gameReducer(state, action) {
           : false,
       };
 
-    case ACTIONS.UPDATE_GAME_STATE:
+    case ACTIONS.UPDATE_GAME_STATE: {
       const updatedState = { ...state.gameState, ...action.payload };
       return {
         ...state,
@@ -108,6 +108,7 @@ function gameReducer(state, action) {
           ? updatedState.players[updatedState.currentPlayerIndex || state.currentPlayerIndex]?.id === state.currentPlayerId
           : state.isMyTurn,
       };
+    }
 
     case ACTIONS.RESET_GAME:
       return {
@@ -221,6 +222,8 @@ export function GameProvider({ children }) {
     } catch (error) {
       handleError(error);
       throw error;
+    } finally {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: false });
     }
   }, [state.gameId, state.currentPlayerId, handleError]);
 
@@ -239,7 +242,7 @@ export function GameProvider({ children }) {
         state.gameId,
         state.currentPlayerId,
         resourceId,
-        featureId
+        featureId,
       );
 
       // Update game state with the response
@@ -251,6 +254,8 @@ export function GameProvider({ children }) {
     } catch (error) {
       handleError(error);
       throw error;
+    } finally {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: false });
     }
   }, [state.gameId, state.currentPlayerId, handleError]);
 
@@ -272,6 +277,8 @@ export function GameProvider({ children }) {
     } catch (error) {
       handleError(error);
       throw error;
+    } finally {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: false });
     }
   }, [state.gameId, state.currentPlayerId, handleError]);
 
@@ -300,10 +307,21 @@ export function GameProvider({ children }) {
 
   // Derived state
   const currentPlayer = state.players[state.currentPlayerIndex] || null;
-  const myPlayer = state.players.find(p => p.id === state.currentPlayerId) || null;
+  const myPlayer = state.players.find((p) => p.id === state.currentPlayerId) || null;
   const deckSize = state.deck.length;
   const isGameActive = state.gamePhase === 'playing';
   const isGameEnded = state.gamePhase === 'ended';
+
+  // DEBUG: Log key game state values that affect draggability
+  console.log('GameContext state:', {
+    isMyTurn: state.isMyTurn,
+    currentPlayerId: state.currentPlayerId,
+    currentPlayerIndex: state.currentPlayerIndex,
+    currentPlayer: currentPlayer ? { id: currentPlayer.id, name: currentPlayer.name } : null,
+    myPlayer: myPlayer ? { id: myPlayer.id, name: myPlayer.name } : null,
+    gamePhase: state.gamePhase,
+    playersCount: state.players.length
+  });
 
   // Context value
   const contextValue = {

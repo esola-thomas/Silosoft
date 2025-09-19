@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Draggable } from 'react-beautiful-dnd';
+import { Draggable } from '@hello-pangea/dnd';
 import { useGame } from '../context/GameContext';
 import './Card.css';
 
@@ -23,6 +23,19 @@ const Card = memo(({
   if (!card) {
     return null;
   }
+
+  // DEBUG: Log card props to track draggable conditions
+  console.log('Card props:', {
+    cardId: card.id,
+    cardType: card.cardType,
+    isDraggable,
+    isUnavailable,
+    isInHand,
+    index,
+    hasUnavailableUntil: !!card.unavailableUntil,
+    unavailableUntil: card.unavailableUntil,
+    willWrapWithDraggable: isDraggable && !isUnavailable && index !== undefined
+  });
 
   const isSelected = selectedCard && selectedCard.id === card.id;
 
@@ -118,7 +131,43 @@ const Card = memo(({
     );
   };
 
+  const formatEffectKey = (key) => key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase());
+
+  const renderEventEffect = () => {
+    if (!card.effect) {
+      return null;
+    }
+
+    if (typeof card.effect === 'string') {
+      return card.effect;
+    }
+
+    const effectEntries = Object.entries(card.effect);
+
+    if (effectEntries.length === 0) {
+      return card.description || null;
+    }
+
+    return (
+      <>
+        {card.description && (
+          <div className="card-effect-description">{card.description}</div>
+        )}
+        <ul className="card-effect-details">
+          {effectEntries.map(([key, value]) => (
+            <li key={key}>
+              <span className="card-effect-key">{formatEffectKey(key)}:</span> {String(value)}
+            </li>
+          ))}
+        </ul>
+      </>
+    );
+  };
+
   const cardTypeInfo = getCardTypeInfo();
+  const eventEffectContent = renderEventEffect();
 
   // Build CSS classes
   const cardClasses = [
@@ -171,9 +220,9 @@ const Card = memo(({
           )}
 
           {/* Event card specific content */}
-          {card.cardType === 'event' && card.effect && (
+          {card.cardType === 'event' && eventEffectContent && (
             <div className="card-effect">
-              {card.effect}
+              {eventEffectContent}
             </div>
           )}
 
@@ -198,7 +247,11 @@ const Card = memo(({
   // Wrap with Draggable if drag is enabled
   if (isDraggable && !isUnavailable && index !== undefined) {
     return (
-      <Draggable draggableId={card.id} index={index}>
+      <Draggable
+        draggableId={card.id}
+        index={index}
+        type="RESOURCE"
+      >
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}

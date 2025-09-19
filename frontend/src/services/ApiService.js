@@ -21,7 +21,7 @@ class ApiService {
       (error) => {
         console.error('API Error:', error);
         return Promise.reject(this.formatError(error));
-      }
+      },
     );
   }
 
@@ -64,19 +64,15 @@ class ApiService {
    * @returns {Promise<Object>} Game state object
    */
   async createGame(playerNames) {
-    try {
-      if (!Array.isArray(playerNames) || playerNames.length < 2 || playerNames.length > 4) {
-        throw new Error('Player names must be an array of 2-4 names');
-      }
-
-      const response = await this.apiClient.post('/games', {
-        playerNames,
-      });
-
-      return response.data;
-    } catch (error) {
-      throw error;
+    if (!Array.isArray(playerNames) || playerNames.length < 2 || playerNames.length > 4) {
+      throw new Error('Player names must be an array of 2-4 names');
     }
+
+    const response = await this.apiClient.post('/games', {
+      playerNames,
+    });
+
+    return response.data;
   }
 
   /**
@@ -85,16 +81,12 @@ class ApiService {
    * @returns {Promise<Object>} Game state object
    */
   async getGameState(gameId) {
-    try {
-      if (!gameId) {
-        throw new Error('Game ID is required');
-      }
-
-      const response = await this.apiClient.get(`/games/${gameId}`);
-      return response.data;
-    } catch (error) {
-      throw error;
+    if (!gameId) {
+      throw new Error('Game ID is required');
     }
+
+    const response = await this.apiClient.get(`/games/${gameId}`);
+    return response.data;
   }
 
   /**
@@ -104,19 +96,15 @@ class ApiService {
    * @returns {Promise<Object>} Response with card and updated game state
    */
   async drawCard(gameId, playerId) {
-    try {
-      if (!gameId || !playerId) {
-        throw new Error('Game ID and Player ID are required');
-      }
-
-      const response = await this.apiClient.post(`/games/${gameId}/actions/draw`, {
-        playerId,
-      });
-
-      return response.data;
-    } catch (error) {
-      throw error;
+    if (!gameId || !playerId) {
+      throw new Error('Game ID and Player ID are required');
     }
+
+    const response = await this.apiClient.post(`/games/${gameId}/actions/draw`, {
+      playerId,
+    });
+
+    return response.data;
   }
 
   /**
@@ -128,21 +116,17 @@ class ApiService {
    * @returns {Promise<Object>} Response with assignment result and updated game state
    */
   async assignResource(gameId, playerId, resourceId, featureId) {
-    try {
-      if (!gameId || !playerId || !resourceId || !featureId) {
-        throw new Error('Game ID, Player ID, Resource ID, and Feature ID are all required');
-      }
-
-      const response = await this.apiClient.post(`/games/${gameId}/actions/assign`, {
-        playerId,
-        resourceId,
-        featureId,
-      });
-
-      return response.data;
-    } catch (error) {
-      throw error;
+    if (!gameId || !playerId || !resourceId || !featureId) {
+      throw new Error('Game ID, Player ID, Resource ID, and Feature ID are all required');
     }
+
+    const response = await this.apiClient.post(`/games/${gameId}/actions/assign`, {
+      playerId,
+      resourceId,
+      featureId,
+    });
+
+    return response.data;
   }
 
   /**
@@ -152,19 +136,15 @@ class ApiService {
    * @returns {Promise<Object>} Updated game state
    */
   async endTurn(gameId, playerId) {
-    try {
-      if (!gameId || !playerId) {
-        throw new Error('Game ID and Player ID are required');
-      }
-
-      const response = await this.apiClient.post(`/games/${gameId}/actions/end-turn`, {
-        playerId,
-      });
-
-      return response.data;
-    } catch (error) {
-      throw error;
+    if (!gameId || !playerId) {
+      throw new Error('Game ID and Player ID are required');
     }
+
+    const response = await this.apiClient.post(`/games/${gameId}/actions/end-turn`, {
+      playerId,
+    });
+
+    return response.data;
   }
 
   /**

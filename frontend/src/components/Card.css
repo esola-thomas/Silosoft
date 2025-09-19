@@ -218,6 +218,24 @@
   margin-top: 4px;
 }
 
+.card-effect-description {
+  margin-bottom: 4px;
+}
+
+.card-effect-details {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.card-effect-details li {
+  margin: 0;
+  list-style: disc;
+}
+
+.card-effect-key {
+  font-weight: 600;
+}
+
 /* Unavailable info */
 .card-unavailable-info {
   font-size: 0.75em;

@@ -236,6 +236,16 @@
   transform: translateY(-1px);
 }
 
+.rules-button {
+  background: #6c757d;
+  color: white;
+}
+
+.rules-button:hover:not(:disabled) {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
 .control-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;

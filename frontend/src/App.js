@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DragDropContext } from 'react-beautiful-dnd';
+import { DragDropContext } from '@hello-pangea/dnd';
 import { GameProvider, useGame } from './context/GameContext';
 import GameBoard from './components/GameBoard';
 import './App.css';
@@ -180,29 +180,88 @@ function GameSetup() {
  * Game Session Component - Wraps the active game with drag and drop
  */
 function GameSession() {
-  const { gameState, assignResource, error } = useGame();
+  const { assignResource, error, myPlayer, featuresInPlay } = useGame();
 
   const handleDragEnd = async (result) => {
-    const { destination, source, draggableId } = result;
+    const { destination, source, draggableId, type } = result;
+
+    // Debug logging to track drag operations
+    console.log('Drag result:', {
+      destination,
+      source,
+      draggableId,
+      type,
+      destinationId: destination?.droppableId,
+      sourceId: source?.droppableId
+    });
 
     // No destination or same position
     if (!destination ||
         (destination.droppableId === source.droppableId &&
          destination.index === source.index)) {
+      console.log('Drag cancelled: no destination or same position');
       return;
     }
 
     // Only handle resource to feature assignments
-    if (!destination.droppableId.startsWith('feature-')) {
+    if (type !== 'RESOURCE' || !destination.droppableId.startsWith('feature-')) {
+      console.log('Drag rejected: type mismatch or not dropping on feature', {
+        type,
+        expectedType: 'RESOURCE',
+        destinationStartsWithFeature: destination.droppableId.startsWith('feature-'),
+        destinationId: destination.droppableId
+      });
+      return;
+    }
+
+    // Validate that the source is a player hand
+    if (!source.droppableId.startsWith('hand-')) {
+      console.log('Drag rejected: source is not a player hand', {
+        sourceId: source.droppableId,
+        sourceStartsWithHand: source.droppableId.startsWith('hand-')
+      });
       return;
     }
 
     try {
       const featureId = destination.droppableId.replace('feature-', '');
       const resourceId = draggableId;
-      const playerId = gameState.players[gameState.currentPlayerIndex].id;
 
-      await assignResource(playerId, resourceId, featureId);
+      // Find the resource card being dragged
+      const draggedResource = myPlayer?.hand?.find((card) => card.id === resourceId);
+
+      // Find the target feature
+      const targetFeature = featuresInPlay?.find((feature) => feature.id === featureId);
+
+      if (!draggedResource || !targetFeature) {
+        console.warn('Invalid drag operation: resource or feature not found');
+        return;
+      }
+
+      // Basic client-side validation for better UX
+      if (draggedResource.cardType !== 'resource') {
+        console.warn('Only resource cards can be assigned to features');
+        return;
+      }
+
+      if (targetFeature.isComplete || targetFeature.completed) {
+        console.warn('Cannot assign resources to completed features');
+        return;
+      }
+
+      // Log assignment attempt for debugging
+      console.log('Attempting to assign resource:', {
+        resourceId,
+        featureId,
+        resourceRole: draggedResource.role,
+        resourceLevel: draggedResource.level,
+        featureRequirements: targetFeature.requirements,
+        source: source.droppableId,
+        destination: destination.droppableId,
+      });
+
+      await assignResource(resourceId, featureId);
+      console.log('Resource assignment successful');
     } catch (err) {
       console.error('Failed to assign resource:', err);
     }
