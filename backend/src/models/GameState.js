@@ -13,6 +13,7 @@ class GameState {
     this.deck = [];
     this.discardPile = [];
     this.featuresInPlay = [];
+    this.featureBacklog = [];
     this.gamePhase = 'lobby';
     this.winCondition = false;
     this.createdAt = new Date().toISOString();
@@ -193,6 +194,7 @@ class GameState {
     if (!featureCard.assignedResources) {
       featureCard.assignedResources = [];
     }
+    resourceCard.assignedTo = featureId;
     featureCard.assignedResources.push(resourceCard);
 
     // Remove the resource from the player's hand
@@ -222,27 +224,34 @@ class GameState {
       });
     }
 
+    const requiredDev = featureCard.requirements?.dev || 0;
+    const requiredPm = featureCard.requirements?.pm || 0;
+    const requiredUx = featureCard.requirements?.ux || 0;
+
     const isComplete =
-      assigned.dev >= featureCard.requirements.dev &&
-      assigned.pm >= featureCard.requirements.pm &&
-      assigned.ux >= featureCard.requirements.ux;
+      assigned.dev >= requiredDev &&
+      assigned.pm >= requiredPm &&
+      assigned.ux >= requiredUx;
 
     if (isComplete && !featureCard.completed) {
       featureCard.completed = true;
 
       // Award points to all players who contributed resources
-      const contributors = new Set();
-      featureCard.assignedResources.forEach(resource => {
-        this.players.forEach(player => {
-          if (player.hand.some(card => card.id === resource.id)) {
-            contributors.add(player.id);
-          }
-        });
-      });
+      const contributors = new Set(
+        featureCard.assignedResources
+          .map(resource => resource.ownerId)
+          .filter(Boolean)
+      );
+
+      if (contributors.size === 0 && featureCard.assignedResources.length > 0) {
+        contributors.add(this.getCurrentPlayer().id);
+      }
 
       contributors.forEach(playerId => {
         const player = this.getPlayerById(playerId);
-        player.score += featureCard.points;
+        if (player) {
+          player.score += featureCard.points;
+        }
       });
 
       // Move completed feature to discard pile
@@ -281,8 +290,12 @@ class GameState {
 
   checkWinCondition() {
     // Win if all features are completed
-    const totalFeatures = this.featuresInPlay.length + this.discardPile.filter(card => card.requirements).length;
-    const completedFeatures = this.discardPile.filter(card => card.completed).length;
+    const totalFeatures =
+      this.featuresInPlay.length +
+      this.discardPile.filter(card => card.requirements).length;
+
+    const completedInPlay = this.featuresInPlay.filter(card => card.completed).length;
+    const completedFeatures = completedInPlay + this.discardPile.filter(card => card.completed).length;
 
     if (completedFeatures === totalFeatures) {
       this.winCondition = true;
@@ -301,7 +314,20 @@ class GameState {
   }
 
   isGameOver() {
-    return this.gamePhase === 'ended' || this.currentRound > this.maxRounds || this.winCondition;
+    if (this.gamePhase === 'ended' || this.currentRound > this.maxRounds || this.winCondition) {
+      return true;
+    }
+
+    const activeFeatures = (this.featuresInPlay || []).filter(feature => !feature.completed).length;
+    const backlogCount = Array.isArray(this.featureBacklog) ? this.featureBacklog.length : 0;
+
+    if (activeFeatures === 0 && backlogCount === 0) {
+      this.winCondition = true;
+      this.gamePhase = 'ended';
+      return true;
+    }
+
+    return false;
   }
 
   startGame() {
@@ -330,6 +356,7 @@ class GameState {
       deck: this.deck,
       discardPile: this.discardPile,
       featuresInPlay: this.featuresInPlay,
+      featureBacklog: this.featureBacklog,
       gamePhase: this.gamePhase,
       winCondition: this.winCondition,
       createdAt: this.createdAt,
@@ -345,6 +372,10 @@ class GameState {
 
     // Then override with the actual data
     Object.assign(gameState, data);
+
+    if (!Array.isArray(gameState.featureBacklog)) {
+      gameState.featureBacklog = [];
+    }
 
     return gameState;
   }

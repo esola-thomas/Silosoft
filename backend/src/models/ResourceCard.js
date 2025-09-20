@@ -12,6 +12,8 @@ class ResourceCard {
     this.color = '';
     this.assignedTo = null;
     this.unavailableUntil = null;
+    this.contractorExpiresAt = null;
+    this.cardType = 'resource';
   }
 
   static validate(cardData) {
@@ -58,8 +60,16 @@ class ResourceCard {
     }
   }
 
-  isAvailable() {
-    return this.assignedTo === null && this.unavailableUntil === null;
+  isAvailable(currentRound = null) {
+    if (this.contractorExpiresAt !== null && currentRound !== null && currentRound >= this.contractorExpiresAt) {
+      return false;
+    }
+
+    if (this.isUnavailable(currentRound)) {
+      return false;
+    }
+
+    return this.assignedTo === null;
   }
 
   isAssigned() {
@@ -109,6 +119,10 @@ class ResourceCard {
 
   makeAvailable() {
     this.unavailableUntil = null;
+  }
+
+  getSkillValue() {
+    return this.value;
   }
 
   getDisplayName() {

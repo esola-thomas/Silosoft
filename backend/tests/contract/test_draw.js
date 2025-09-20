@@ -52,8 +52,12 @@ describe('POST /api/v1/games/{gameId}/actions/draw - Contract Tests', () => {
       const currentPlayer = drawResponse.body.gameState.players.find(
         (p) => p.id === playerId,
       );
-      expect(currentPlayer.hand.length).toBe(initialHandSize + 1);
-      expect(currentPlayer.hand.map((c) => c.id)).toContain(drawResponse.body.card.id);
+      if (drawResponse.body.card.cardType === 'event') {
+        expect(currentPlayer.hand.length).toBe(initialHandSize);
+      } else {
+        expect(currentPlayer.hand.length).toBe(initialHandSize + 1);
+        expect(currentPlayer.hand.map((c) => c.id)).toContain(drawResponse.body.card.id);
+      }
     });
 
     it('should remove card from deck', async () => {

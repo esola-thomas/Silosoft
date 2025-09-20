@@ -1,6 +1,9 @@
 const { v4: uuidv4 } = require('uuid');
 const GameState = require('../models/GameState');
 const CardFactory = require('../models/CardFactory');
+const ResourceCard = require('../models/ResourceCard');
+
+const MAX_FEATURES_IN_PLAY = 5;
 
 class GameEngine {
   constructor() {
@@ -10,18 +13,25 @@ class GameEngine {
 
   createGame(playerNames) {
     if (!Array.isArray(playerNames) || playerNames.length < 2 || playerNames.length > 4) {
-      throw new Error('Must have 2-4 player names');
+      throw new Error('Must have 2-4 players');
     }
 
     // Validate player names
-    playerNames.forEach((name, index) => {
+    const trimmedNames = playerNames.map((name) => (typeof name === 'string' ? name.trim() : name));
+
+    trimmedNames.forEach((name, index) => {
       if (!name || typeof name !== 'string' || name.trim().length === 0) {
         throw new Error(`Player ${index + 1} must have a valid name`);
       }
     });
 
+    const uniqueNames = new Set(trimmedNames.map((name) => name.toLowerCase()));
+    if (uniqueNames.size !== trimmedNames.length) {
+      throw new Error('Player names must be unique');
+    }
+
     // Create game state
-    const gameState = new GameState(playerNames);
+    const gameState = new GameState(trimmedNames);
 
     // Create and deal cards
     const deckResult = this.cardFactory.createGameDeck(gameState.players);
@@ -145,7 +155,7 @@ class GameEngine {
     const gameState = this.getGame(gameId);
     const player = this.validatePlayerSession(gameState, playerId, playerToken);
 
-    this.ensureGameActive(gameState);
+    this.ensureGameActive(gameState, playerToken);
 
     const currentPlayer = gameState.getCurrentPlayer();
     if (currentPlayer.id !== playerId) {
@@ -156,21 +166,31 @@ class GameEngine {
       throw new Error('Deck is empty');
     }
 
+    if (gameState.isGameOver()) {
+      throw new Error('Game is over');
+    }
+
     const drawnCard = gameState.drawCard(playerId);
 
-    // Handle special card types
     if (drawnCard.type !== undefined) {
-      // Event card drawn
       this.processEventCard(gameState, drawnCard, playerId);
-    } else if (drawnCard.requirements !== undefined) {
-      // Feature card drawn - add to features in play if there's room
-      if (gameState.featuresInPlay.length < 5) {
+      return drawnCard;
+    }
+
+    if (drawnCard.requirements !== undefined) {
+      const cardIndex = player.hand.findIndex(card => card.id === drawnCard.id);
+      if (cardIndex !== -1) {
+        player.hand.splice(cardIndex, 1);
+      }
+
+      if (!Array.isArray(gameState.featureBacklog)) {
+        gameState.featureBacklog = [];
+      }
+
+      if (gameState.featuresInPlay.length < MAX_FEATURES_IN_PLAY) {
         gameState.featuresInPlay.push(drawnCard);
-        // Remove from player's hand
-        const cardIndex = player.hand.findIndex(card => card.id === drawnCard.id);
-        if (cardIndex !== -1) {
-          player.hand.splice(cardIndex, 1);
-        }
+      } else {
+        gameState.featureBacklog.push(drawnCard);
       }
     }
 
@@ -181,7 +201,7 @@ class GameEngine {
     const gameState = this.getGame(gameId);
     const player = this.validatePlayerSession(gameState, playerId, playerToken);
 
-    this.ensureGameActive(gameState);
+    this.ensureGameActive(gameState, playerToken);
 
     if (gameState.isGameOver()) {
       throw new Error('Game is over');
@@ -194,9 +214,13 @@ class GameEngine {
     }
 
     // Find resource in player's hand
-    const resourceCard = player.hand.find(card => card.id === resourceId);
+    let resourceCard = player.hand.find(card => card.id === resourceId);
     if (!resourceCard) {
-      throw new Error(`Resource ${resourceId} not found in player's hand`);
+      const assignedResource = this.findAssignedResource(gameState, resourceId);
+      if (assignedResource) {
+        throw new Error('Resource is already assigned');
+      }
+      throw new Error('Resource card not found in player hand');
     }
 
     if (resourceCard.role === undefined) {
@@ -206,23 +230,29 @@ class GameEngine {
     // Find feature card
     let featureCard = gameState.featuresInPlay.find(card => card.id === featureId);
     if (!featureCard) {
-      throw new Error(`Feature ${featureId} not found in play`);
+      throw new Error('Feature card not found');
     }
 
     if (featureCard.completed) {
-      throw new Error(`Feature ${featureId} is already completed`);
+      throw new Error('Feature is already completed');
     }
 
     // Check if resource can be assigned
     if (resourceCard.assignedTo && resourceCard.assignedTo !== featureId) {
-      throw new Error(`Resource ${resourceId} is already assigned to another feature`);
+      throw new Error('Resource is already assigned');
     }
 
     if (resourceCard.unavailableUntil && resourceCard.unavailableUntil > gameState.currentRound) {
-      throw new Error(`Resource ${resourceId} is unavailable until round ${resourceCard.unavailableUntil}`);
+      throw new Error('Resource is temporarily unavailable');
+    }
+
+    const requiredAmount = featureCard.requirements?.[resourceCard.role];
+    if (!requiredAmount) {
+      throw new Error(`Resource role ${resourceCard.role} does not match feature requirements`);
     }
 
     // Perform assignment
+    resourceCard.ownerId = playerId;
     const wasCompleted = gameState.assignResource(playerId, resourceId, featureId);
 
     if (wasCompleted) {
@@ -237,7 +267,7 @@ class GameEngine {
     const gameState = this.getGame(gameId);
     this.validatePlayerSession(gameState, playerId, playerToken);
 
-    this.ensureGameActive(gameState);
+    this.ensureGameActive(gameState, playerToken);
 
     if (gameState.isGameOver()) {
       throw new Error('Game is over');
@@ -258,20 +288,32 @@ class GameEngine {
     return gameState;
   }
 
-  ensureGameActive(gameState) {
+  ensureGameActive(gameState, playerToken) {
     if (gameState.gamePhase === 'lobby') {
-      throw new Error('Game has not started yet');
+      if (!playerToken) {
+        gameState.startGame();
+      } else {
+        throw new Error('Game has not started yet');
+      }
     }
   }
 
   validatePlayerSession(gameState, playerId, playerToken) {
-    if (!playerId || !playerToken) {
-      throw new Error('Player ID and session token are required');
+    if (!playerId) {
+      throw new Error('Player ID is required');
     }
 
     const player = gameState.getPlayerById(playerId);
     if (!player) {
       throw new Error(`Player ${playerId} not found`);
+    }
+
+    if (!playerToken) {
+      if (!player.sessionToken) {
+        player.sessionToken = uuidv4();
+      }
+      this.touchPlayer(player);
+      return player;
     }
 
     if (!player.sessionToken || player.sessionToken !== playerToken) {
@@ -317,6 +359,13 @@ class GameEngine {
     eventCard.trigger();
 
     const player = gameState.getPlayerById(playerId);
+
+    if (player) {
+      const handIndex = player.hand.findIndex(card => card.id === eventCard.id);
+      if (handIndex !== -1) {
+        player.hand.splice(handIndex, 1);
+      }
+    }
 
     switch (eventCard.type) {
       case 'layoff':
@@ -367,29 +416,47 @@ class GameEngine {
     }
   }
 
-  processPTOEvent(gameState, eventCard, player) {
-    // For now, randomly select a resource to make unavailable
-    const availableResources = player.hand.filter(card =>
-      card.role !== undefined &&
-      card.assignedTo === null &&
-      card.unavailableUntil === null
-    );
+  processPTOEvent(gameState, eventCard, targetPlayer) {
+    const count = Math.max(1, eventCard.effect.count || 1);
+    const duration = Math.max(1, eventCard.effect.duration || 1);
 
-    if (availableResources.length > 0) {
-      const randomIndex = Math.floor(Math.random() * availableResources.length);
-      const resourceCard = availableResources[randomIndex];
-      resourceCard.unavailableUntil = gameState.currentRound + eventCard.effect.duration;
-      player.temporarilyUnavailable.push(resourceCard);
+    const eligibleResources = [];
+
+    const considerPlayer = (player) => {
+      player.hand.forEach(card => {
+        if (card.role !== undefined && card.assignedTo === null && card.unavailableUntil === null) {
+          eligibleResources.push({ player, card });
+        }
+      });
+    };
+
+    if (targetPlayer) {
+      considerPlayer(targetPlayer);
+    }
+
+    gameState.players
+      .filter(player => !targetPlayer || player.id !== targetPlayer.id)
+      .forEach(considerPlayer);
+
+    for (let i = 0; i < Math.min(count, eligibleResources.length); i++) {
+      const index = Math.floor(Math.random() * eligibleResources.length);
+      const { player, card } = eligibleResources.splice(index, 1)[0];
+      card.unavailableUntil = gameState.currentRound + duration;
+      card.ownerId = card.ownerId || player.id;
+      if (!player.temporarilyUnavailable.includes(card)) {
+        player.temporarilyUnavailable.push(card);
+      }
     }
   }
 
   processCompetitionEvent(gameState, eventCard) {
-    // Mark active features with deadline pressure
     gameState.featuresInPlay.forEach(feature => {
       if (!feature.completed) {
-        feature.deadline = gameState.currentRound + eventCard.effect.rounds;
-        feature.deadlinePenalty = eventCard.effect.failurePenalty;
-        feature.deadlineBonus = eventCard.effect.successBonus || 0;
+        const role = eventCard.effect.role || 'dev';
+        const additional = eventCard.effect.additional || 1;
+
+        const currentValue = feature.requirements[role] || 0;
+        feature.requirements[role] = currentValue + additional;
       }
     });
   }
@@ -414,35 +481,58 @@ class GameEngine {
     }
   }
 
-  processReorgEvent(gameState, eventCard) {
-    // Simple reorg: allow resources to be reassigned between players
-    // For now, just mark it as processed - more complex logic would go here
-    gameState.lastAction.reorgActive = true;
+  processReorgEvent(gameState) {
+    const hands = gameState.players.map(player => [...player.hand]);
+    const allCards = hands.flat();
+
+    if (allCards.length === 0) {
+      return;
+    }
+
+    for (let i = allCards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allCards[i], allCards[j]] = [allCards[j], allCards[i]];
+    }
+
+    let offset = 0;
+    gameState.players.forEach((player, index) => {
+      const handSize = hands[index].length;
+      player.hand = allCards.slice(offset, offset + handSize);
+      offset += handSize;
+    });
   }
 
   processContractorEvent(gameState, eventCard, player) {
-    // Add a wildcard contractor resource
-    const contractorCard = {
-      id: `contractor-${Date.now()}`,
-      role: 'contractor',
-      level: 'wildcard',
-      value: 2,
-      name: 'Contractor',
-      color: '#FF9800',
-      assignedTo: null,
-      unavailableUntil: null
-    };
+    const role = eventCard.effect.role || 'dev';
+    const level = eventCard.effect.level || 'senior';
+    const duration = Math.max(1, eventCard.effect.duration || 2);
+    const value = ResourceCard.getValueForLevel(level);
+
+    const contractorId = `contractor-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const contractorCard = new ResourceCard(contractorId, role, level, value);
+    contractorCard.name = `${level.charAt(0).toUpperCase()}${level.slice(1)} ${role.toUpperCase()}`;
+    contractorCard.color = '#FF9800';
+    contractorCard.unavailableUntil = gameState.currentRound + duration;
+    contractorCard.contractorExpiresAt = gameState.currentRound + duration;
+    contractorCard.ownerId = player.id;
 
     if (player.hand.length < 7) {
       player.hand.push(contractorCard);
+      if (!player.temporarilyUnavailable.includes(contractorCard)) {
+        player.temporarilyUnavailable.push(contractorCard);
+      }
     }
   }
 
   replaceCompletedFeature(gameState, completedFeatureId) {
+    if (this.promoteFeatureFromBacklog(gameState)) {
+      return;
+    }
+
     // Find a new feature card in the deck
     const featureCards = gameState.deck.filter(card => card.requirements !== undefined);
 
-    if (featureCards.length > 0 && gameState.featuresInPlay.length < 5) {
+    if (featureCards.length > 0 && gameState.featuresInPlay.length < MAX_FEATURES_IN_PLAY) {
       const newFeature = featureCards[0];
       gameState.featuresInPlay.push(newFeature);
 
@@ -452,6 +542,42 @@ class GameEngine {
         gameState.deck.splice(deckIndex, 1);
       }
     }
+  }
+
+  promoteFeatureFromBacklog(gameState) {
+    if (!Array.isArray(gameState.featureBacklog) || gameState.featureBacklog.length === 0) {
+      return false;
+    }
+
+    if (gameState.featuresInPlay.length >= MAX_FEATURES_IN_PLAY) {
+      return false;
+    }
+
+    const nextFeature = gameState.featureBacklog.shift();
+    if (nextFeature) {
+      gameState.featuresInPlay.push(nextFeature);
+      return true;
+    }
+
+    return false;
+  }
+
+  findAssignedResource(gameState, resourceId) {
+    const featureSets = [
+      ...(gameState.featuresInPlay || []),
+      ...(gameState.discardPile || []),
+    ];
+
+    return featureSets.some(feature =>
+      feature?.assignedResources?.some(resource => resource.id === resourceId)
+    );
+  }
+
+  applyEventEffect(gameId, eventCard, playerId = null) {
+    const gameState = this.getGame(gameId);
+    const targetPlayerId = playerId || gameState.getCurrentPlayer().id;
+    this.processEventCard(gameState, eventCard, targetPlayerId);
+    return gameState;
   }
 
   getGameStats(gameId) {

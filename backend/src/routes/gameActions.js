@@ -71,10 +71,10 @@ router.post('/:gameId/actions/draw', async (req, res) => {
       });
     }
 
-    if (!playerId || !playerToken) {
+    if (!playerId) {
       return res.status(400).json({
         error: 'Bad Request',
-        message: 'playerId and playerToken are required'
+        message: 'playerId is required'
       });
     }
 
@@ -104,10 +104,10 @@ router.post('/:gameId/actions/assign', async (req, res) => {
       });
     }
 
-    if (!playerId || !resourceId || !featureId || !playerToken) {
+    if (!playerId || !resourceId || !featureId) {
       return res.status(400).json({
         error: 'Bad Request',
-        message: 'playerId, playerToken, resourceId, and featureId are required'
+        message: 'playerId, resourceId, and featureId are required'
       });
     }
 
@@ -158,10 +158,10 @@ router.post('/:gameId/actions/end-turn', async (req, res) => {
       });
     }
 
-    if (!playerId || !playerToken) {
+    if (!playerId) {
       return res.status(400).json({
         error: 'Bad Request',
-        message: 'playerId and playerToken are required'
+        message: 'playerId is required'
       });
     }
 

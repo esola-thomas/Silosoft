@@ -12,6 +12,7 @@ class FeatureCard {
     this.assignedResources = [];
     this.completed = false;
     this.complexity = this.determineComplexity(points);
+    this.cardType = 'feature';
   }
 
   static validate(cardData) {
@@ -61,15 +62,30 @@ class FeatureCard {
       return false;
     }
 
+    const remaining = this.getRemainingRequirements();
+    const needed = remaining[resourceCard.role] || 0;
+    if (needed <= 0) {
+      return false;
+    }
+
     return true;
   }
 
   assignResource(resourceCard) {
+    if (this.completed) {
+      throw new Error('Feature is already completed');
+    }
+
     if (!this.canAssignResource(resourceCard)) {
       throw new Error(`Cannot assign resource ${resourceCard.id} to feature ${this.id}`);
     }
 
-    resourceCard.assignedTo = this.id;
+    if (typeof resourceCard.assign === 'function') {
+      resourceCard.assign(this.id);
+    } else {
+      resourceCard.assignedTo = this.id;
+    }
+
     this.assignedResources.push(resourceCard);
 
     // Check if feature is now complete
@@ -99,9 +115,9 @@ class FeatureCard {
     });
 
     const isComplete =
-      assigned.dev >= this.requirements.dev &&
-      assigned.pm >= this.requirements.pm &&
-      assigned.ux >= this.requirements.ux;
+      assigned.dev >= (this.requirements?.dev || 0) &&
+      assigned.pm >= (this.requirements?.pm || 0) &&
+      assigned.ux >= (this.requirements?.ux || 0);
 
     if (isComplete && !this.completed) {
       this.completed = true;
@@ -119,10 +135,31 @@ class FeatureCard {
 
   getRemainingRequirements() {
     return {
-      dev: Math.max(0, this.requirements.dev - this.getAssignedValue('dev')),
-      pm: Math.max(0, this.requirements.pm - this.getAssignedValue('pm')),
-      ux: Math.max(0, this.requirements.ux - this.getAssignedValue('ux'))
+      dev: Math.max(0, (this.requirements?.dev || 0) - this.getAssignedValue('dev')),
+      pm: Math.max(0, (this.requirements?.pm || 0) - this.getAssignedValue('pm')),
+      ux: Math.max(0, (this.requirements?.ux || 0) - this.getAssignedValue('ux'))
     };
+  }
+
+  isCompleted() {
+    return this.completed;
+  }
+
+  getCompletionPercentage() {
+    const totalRequired = (this.requirements?.dev || 0) + (this.requirements?.pm || 0) + (this.requirements?.ux || 0);
+
+    if (totalRequired === 0) {
+      return this.completed ? 100 : 0;
+    }
+
+    const assignedTotals = {
+      dev: Math.min(this.getAssignedValue('dev'), this.requirements?.dev || 0),
+      pm: Math.min(this.getAssignedValue('pm'), this.requirements?.pm || 0),
+      ux: Math.min(this.getAssignedValue('ux'), this.requirements?.ux || 0),
+    };
+
+    const achieved = assignedTotals.dev + assignedTotals.pm + assignedTotals.ux;
+    return Math.min(100, Number(((achieved / totalRequired) * 100).toFixed(2)));
   }
 
   toJSON() {

@@ -19,7 +19,7 @@ describe('POST /api/v1/games - Contract Tests', () => {
       expect(response.body.players[1]).toHaveProperty('name', 'Bob');
       expect(response.body).toHaveProperty('currentRound', 1);
       expect(response.body).toHaveProperty('currentPlayerIndex', 0);
-      expect(response.body).toHaveProperty('gamePhase', 'playing');
+      expect(response.body).toHaveProperty('gamePhase', 'lobby');
       expect(response.body).toHaveProperty('deck');
       expect(response.body.deck.length).toBeGreaterThan(0);
     });

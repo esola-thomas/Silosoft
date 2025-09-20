@@ -100,7 +100,7 @@ describe('GET /api/v1/games/{gameId} - Contract Tests', () => {
         .expect(200);
 
       expect(response.body.gamePhase).toBeDefined();
-      expect(['setup', 'playing', 'ended']).toContain(response.body.gamePhase);
+      expect(['lobby', 'setup', 'playing', 'ended']).toContain(response.body.gamePhase);
     });
 
     it('should show win condition status', async () => {

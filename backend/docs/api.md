@@ -338,6 +338,7 @@ Creates a new game session with 2-4 players.
   "currentPlayerIndex": 0,
   "currentPlayerId": "player-1",
   "featuresInPlay": [],
+  "featureBacklog": [],
   "deckSize": 35,
   "maxRounds": 10,
   "winCondition": false,
@@ -410,6 +411,7 @@ Retrieves the current state of a game.
       "completed": false
     }
   ],
+  "featureBacklog": [/* queued features waiting for a slot */],
   "deckSize": 28,
   "discardPileSize": 7,
   "maxRounds": 10,

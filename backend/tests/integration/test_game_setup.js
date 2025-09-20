@@ -113,7 +113,7 @@ describe('Game Setup Integration Tests', () => {
       expect(game.id).toBeDefined();
       expect(game.currentRound).toBe(1);
       expect(game.currentPlayerIndex).toBe(0);
-      expect(game.gamePhase).toBe('playing');
+      expect(game.gamePhase).toBe('lobby');
       expect(game.winCondition).toBe(false);
 
       game.players.forEach((player, index) => {

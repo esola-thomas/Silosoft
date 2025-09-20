@@ -1,22 +1,28 @@
 class EventCard {
   constructor(id, type, name, description, effect) {
-    if (!id || !type || !name || !description || !effect) {
-      throw new Error('EventCard must have id, type, name, description, and effect');
+    if (description && typeof description === 'object' && effect === undefined) {
+      effect = description;
+      description = name;
+    }
+
+    if (!id || !type || !effect) {
+      throw new Error('EventCard must have id, type, and effect');
     }
 
     this.id = id;
     this.type = type;
-    this.name = name;
-    this.description = description;
+    this.name = name || '';
+    this.description = description || '';
     this.effect = effect;
     this.color = '';
     this.triggered = false;
     this.resolved = false;
+    this.cardType = 'event';
   }
 
   static validate(cardData) {
-    if (!cardData.id || !cardData.type || !cardData.name || !cardData.description || !cardData.effect) {
-      throw new Error('EventCard must have id, type, name, description, and effect');
+    if (!cardData.id || !cardData.type || !cardData.effect) {
+      throw new Error('EventCard must have id, type, and effect');
     }
 
     // Validate event type

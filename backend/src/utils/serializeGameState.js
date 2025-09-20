@@ -64,6 +64,7 @@ const serializeGameState = (gameState, {
     players: (gameState.players || []).map((player) =>
       serializePlayer(player, { includeJoinCodes })),
     featuresInPlay: (gameState.featuresInPlay || []).map(formatCard),
+    featureBacklog: (gameState.featureBacklog || []).map(formatCard),
     deckSize: Array.isArray(gameState.deck) ? gameState.deck.length : 0,
     winCondition: gameState.winCondition,
     maxRounds: gameState.maxRounds,

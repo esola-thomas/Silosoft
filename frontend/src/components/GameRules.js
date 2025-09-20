@@ -108,7 +108,7 @@ const GameRules = memo(({ isOpen, onClose }) => {
                     <strong>Draw Card:</strong> Draw one card from the deck
                     <ul>
                       <li>Feature Card: Adds a new project to complete</li>
-                      <li>HR Event Card: Triggers immediate workplace disruption</li>
+                      <li>HR Event Card: Triggers immediately and is discarded</li>
                     </ul>
                   </li>
                   <li>
@@ -138,6 +138,7 @@ const GameRules = memo(({ isOpen, onClose }) => {
                   <ul>
                     <li>Show required resource types (Dev, PM, UX)</li>
                     <li>Specify skill levels needed (Entry +1, Junior +2, Senior +3)</li>
+                    <li>Only five features can be active at once—extra features wait in the backlog until a slot opens</li>
                     <li>Must be completed within 10 rounds</li>
                   </ul>
                 </div>
@@ -163,6 +164,7 @@ const GameRules = memo(({ isOpen, onClose }) => {
                     <li><strong>Contractor Hiring:</strong> Add wildcard resources</li>
                     <li><strong>PTO/PLM:</strong> Make resources temporarily unavailable</li>
                     <li><strong>Competition Deadline:</strong> Force immediate feature completion</li>
+                    <li>Event cards never stay in your hand—they resolve instantly</li>
                   </ul>
                 </div>
               </div>
