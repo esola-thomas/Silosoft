@@ -75,6 +75,65 @@ body {
   -webkit-font-smoothing: antialiased;
   padding-top:1rem; /* subtle breathing space without vertical centering */
 }
+/* End game modal enhancements */
+.endgame-backdrop { backdrop-filter: blur(10px) saturate(140%); }
+.endgame-modal { position:relative; overflow:hidden; background:linear-gradient(155deg,var(--color-surface),var(--color-surface-alt)); border:1px solid var(--color-border); border-radius:22px; padding:1.25rem 1.4rem 1.5rem; width:min(640px,92vw); box-shadow:0 10px 28px -6px rgba(0,0,0,0.55),0 0 0 1px rgba(255,255,255,0.04); font-size:.7rem; animation:popIn .55s cubic-bezier(.34,1.56,.64,1); }
+.endgame-modal:before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 78% -5%,rgba(255,255,255,0.12),transparent 65%); pointer-events:none; }
+.endgame-modal.victory { background:linear-gradient(140deg,#1d2634 0%, #213249 55%, #27415f 100%); box-shadow:0 0 0 1px rgba(79,156,255,.5),0 8px 30px -8px rgba(0,0,0,.7); }
+.endgame-modal.victory:after { content:""; position:absolute; inset:0; background:linear-gradient(135deg,rgba(79,156,255,.25),rgba(177,77,255,.18)); mix-blend-mode:overlay; opacity:.8; pointer-events:none; }
+.endgame-modal.defeat { background:linear-gradient(150deg,#221b1d,#1b2230 60%); box-shadow:0 0 0 1px rgba(255,77,97,.4),0 8px 26px -8px rgba(0,0,0,.75); }
+.endgame-modal.defeat:after { content:""; position:absolute; inset:0; background:linear-gradient(125deg,rgba(255,77,97,.2),rgba(79,156,255,.15)); mix-blend-mode:overlay; opacity:.5; pointer-events:none; }
+.endgame-header { position:relative; }
+.endgame-title { margin:0 0 .35rem; font-size:1.55rem; letter-spacing:1.5px; font-weight:700; background:linear-gradient(90deg,#4f9cff,#a86bff); -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:0 2px 12px rgba(0,0,0,0.5); }
+.endgame-modal.defeat .endgame-title { background:linear-gradient(90deg,#ff4d61,#ffb347); -webkit-background-clip:text; background-clip:text; }
+.endgame-config { margin:.1rem 0 .9rem; font-size:.65rem; opacity:.7; }
+.endgame-metrics { display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); margin:.4rem 0 1.1rem; }
+.metric { display:flex; flex-direction:column; gap:.35rem; background:var(--color-surface); padding:.55rem .7rem .65rem; border:1px solid #2a3547; border-radius:12px; position:relative; overflow:hidden; }
+.metric:before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 75% -10%,rgba(111,93,252,0.25),transparent 60%); pointer-events:none; opacity:.6; }
+.metric-label { font-size:.55rem; text-transform:uppercase; letter-spacing:1px; opacity:.7; font-weight:600; }
+.metric-value { font-size:.95rem; font-weight:700; letter-spacing:.5px; }
+.metric-bar { height:6px; background:var(--color-bg-alt); border-radius:4px; overflow:hidden; position:relative; box-shadow:inset 0 0 0 1px var(--color-pill-bg); }
+.metric-bar-fill { position:absolute; inset:0; background:var(--gradient-accent); box-shadow:0 0 6px 1px rgba(79,156,255,.35); transition:width .6s cubic-bezier(.4,.8,.2,1); }
+.metric-bar-fill.alt { background:linear-gradient(90deg,#ffb347,#ff4d61); box-shadow:0 0 6px 1px rgba(255,179,71,.35); }
+.players-breakdown { width:100%; border-collapse:collapse; margin-top:.2rem; font-size:.6rem; }
+.players-breakdown th { text-align:left; padding:.4rem .5rem; font-weight:600; background:var(--color-select-bg); letter-spacing:.6px; }
+.players-breakdown td { padding:.45rem .5rem; border-top:1px solid #2a3547; }
+.players-breakdown tbody tr:last-child td { border-bottom:1px solid #2a3547; }
+.players-breakdown td.num { text-align:center; font-weight:600; }
+.players-breakdown tr.top-performer { background:linear-gradient(90deg,rgba(79,156,255,.15),rgba(177,77,255,.15)); }
+.players-breakdown tr.top-performer td { position:relative; }
+.players-breakdown tr.top-performer td:first-child { font-weight:700; }
+.players-breakdown .badge { margin-left:.35rem; font-size:.55rem; color:#ffd950; filter:drop-shadow(0 0 4px rgba(255,217,80,.4)); }
+.endgame-actions { display:flex; flex-wrap:wrap; gap:.6rem; margin-top:1.1rem; }
+.endgame-actions .btn { font-size:.65rem; }
+
+/* Confetti */
+.confetti-layer { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.confetti-bit { position:absolute; top:-10px; border-radius:2px; animation: confettiFall 4.6s linear forwards; opacity:.9; }
+@keyframes confettiFall { 0% { transform:translateY(-10px) rotate(var(--rot,0deg)); opacity:1; } 80% { opacity:1; } 100% { transform:translateY(115vh) rotate(360deg); opacity:0; } }
+@media (prefers-reduced-motion: reduce) { .confetti-bit { animation:none; display:none; } }
+
+/* Defeat subtle shake accent */
+.endgame-modal.defeat { animation:popIn .55s cubic-bezier(.34,1.56,.64,1), defeatPulse 4s ease-in-out 1.2s infinite; }
+@keyframes defeatPulse { 0%,100% { box-shadow:0 0 0 1px rgba(255,77,97,.35),0 8px 26px -8px rgba(0,0,0,.75);} 50% { box-shadow:0 0 0 1px rgba(255,77,97,.55),0 8px 30px -6px rgba(0,0,0,.8); } }
+@media (prefers-reduced-motion: reduce) { .endgame-modal.defeat { animation:popIn .4s ease; } }
+
+/* Light theme adjustments */
+:root[data-theme='light'] .endgame-modal { background:linear-gradient(155deg,#ffffff,#eef2f7); }
+:root[data-theme='light'] .endgame-modal.victory { background:linear-gradient(140deg,#ffffff 0%, #eaf2ff 55%, #f1e9ff 100%); }
+:root[data-theme='light'] .metric { background:linear-gradient(135deg,#ffffff,#eef2f7); border-color: var(--color-border); }
+:root[data-theme='light'] .players-breakdown tr.top-performer { background:linear-gradient(90deg,rgba(37,99,235,.15),rgba(124,58,237,.15)); }
+
+/* High contrast considerations */
+:root[data-theme='hc'] .endgame-modal { background:#000; border:2px solid #fff; box-shadow:none; }
+:root[data-theme='hc'] .endgame-modal.victory { background:#000; }
+:root[data-theme='hc'] .metric { background:#000; border:2px solid #fff; }
+:root[data-theme='hc'] .players-breakdown th { background:#111; }
+:root[data-theme='hc'] .players-breakdown td { border-color:#fff; }
+:root[data-theme='hc'] .players-breakdown tr.top-performer { background:#111; }
+:root[data-theme='hc'] .metric-bar { box-shadow:inset 0 0 0 2px #fff; }
+:root[data-theme='hc'] .metric-bar-fill { box-shadow:none; }
+
 /* Vivid setup screen */
 .setup-screen.vivid { max-width:840px; margin:0 auto; padding:2.5rem 2rem 3rem; position:relative; backdrop-filter: blur(22px) saturate(160%); background: linear-gradient(135deg, rgba(45,139,255,0.18), rgba(132,61,255,0.18)); border:1px solid rgba(255,255,255,0.08); border-radius:28px; box-shadow:0 8px 24px -6px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.05); }
 .setup-screen.vivid .game-title { font-size:2.4rem; letter-spacing:1.5px; margin:0 0 .25rem; background:linear-gradient(90deg,#4fa3ff,#a96bff); -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:0 2px 8px rgba(0,0,0,0.4); }

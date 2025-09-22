@@ -1,3 +1,80 @@
+---
+
+## Thematic Feature Catalog (Microsoft-Style Deck)
+
+The numeric placeholder features have been replaced by a curated set of 30 thematic features reflecting common Microsoft cloud & productivity scenarios. Total points roughly map to difficulty (3–7). Multi-role features skew higher; three-role cards usually land at 6–7.
+
+| ID  | Name                                 | Description (≤ 80 chars)                                       | DEV | PM | UX | Total |
+|-----|--------------------------------------|-----------------------------------------------------------------|-----|----|----|-------|
+| F1  | Azure AD Single Sign-On              | Enable tenant SSO via OpenID Connect                            | 3   | 2  | -  | 5     |
+| F2  | Teams Presence Sync                  | Real-time presence across clients                               | 3   | 2  | 1  | 6     |
+| F3  | Outlook Add-in Compose Pane          | Add-in panel for AI assisted replies                            | 3   | -  | 1  | 4     |
+| F4  | SharePoint Document Version Diff     | Visual diff of major document revisions                         | 4   | 2  | 1  | 7     |
+| F5  | OneDrive Offline Sync Optimization   | Smarter chunking reduces conflicts                              | 4   | 1  | -  | 5     |
+| F6  | Teams Meeting Live Reactions         | Animated accessible emoji reaction stream                       | 3   | 1  | 2  | 6     |
+| F7  | Azure Cost Anomaly Alerting          | Detect & notify spend spikes                                    | 3   | 2  | -  | 5     |
+| F8  | Power BI Dark Theme Polish           | Improve contrast token mapping                                  | 2   | -  | 2  | 4     |
+| F9  | M365 Unified Search Autosuggest      | Cross-product query suggestions                                 | 4   | 2  | 1  | 7     |
+| F10 | Azure Functions Cold Start Reduction | Warm pool for premium functions                                 | 5   | 1  | -  | 6     |
+| F11 | Teams Channel Archive Restore        | Self-service channel restore flow                               | 3   | 2  | -  | 5     |
+| F12 | Intune Device Compliance Badge       | Device health indicator in portal                               | 2   | 1  | 1  | 4     |
+| F13 | Azure Monitor Query Snippets         | Reusable tagged Kusto snippets                                  | 3   | 2  | -  | 5     |
+| F14 | Outlook Calendar Focus Time Block    | Auto-insert focus based on meeting load                         | 3   | 2  | 1  | 6     |
+| F15 | Edge Collections Sharing             | Share and collaborate on tab groups                             | 3   | 1  | 1  | 5     |
+| F16 | Azure DevOps Sprint Burnup Chart     | Burnup visualization widget                                     | 2   | 2  | -  | 4     |
+| F17 | Teams Adaptive Background Blur       | Dynamic blur tuned to motion & light                            | 4   | 1  | 2  | 7     |
+| F18 | SharePoint Inline Image OCR          | Extract text for indexing                                       | 4   | 2  | -  | 6     |
+| F19 | Azure Portal Keyboard Shortcuts      | Global resource navigation shortcuts                            | 2   | 1  | 2  | 5     |
+| F20 | Teams Poll Template Library          | Pre-built poll templates                                        | 2   | 2  | -  | 4     |
+| F21 | OneDrive Link Expiration Policy      | Policy UI for mandatory expirations                             | 3   | 2  | -  | 5     |
+| F22 | PowerPoint Live Co-Author Pointer    | Show collaborator pointer live                                  | 3   | 1  | 2  | 6     |
+| F23 | Azure Role Assignment Audit Export   | Scheduled RBAC diff export                                      | 3   | 2  | -  | 5     |
+| F24 | Defender Threat Timeline Zoom        | Zoomable incident progression                                   | 4   | 1  | 2  | 7     |
+| F25 | Teams Message Pinning v2             | Multiple ordered pin slots                                      | 3   | 1  | -  | 4     |
+| F26 | Azure Backup Restore Progress UI     | Show progress & ETA for restores                                | 3   | 1  | 1  | 5     |
+| F27 | M365 Data Residency Report           | Export geo storage locations                                    | 2   | 3  | -  | 5     |
+| F28 | Teams Emoji Skin Tone Memory         | Persist last selected tone                                      | 2   | -  | 1  | 3     |
+| F29 | Outlook Mobile Attachment Quick Save | One-tap save to recent folder                                   | 3   | -  | 1  | 4     |
+| F30 | Azure Policy Drift Detection         | Detect & flag resource config drift                             | 4   | 2  | -  | 6     |
+
+Balancing notes:
+- Mixed 1, 2, 3-role distribution encourages collaboration & resource diversity.
+- High difficulty (≥7) requires either three roles or heavy DEV commitment.
+- UX appears selectively to keep its scarcity strategically meaningful.
+
+Implementation notes:
+- Backend deck now returns this catalog unless a legacy `size` override is provided.
+- `FeatureCard.description` (≤140 chars) added & surfaced in serializers and UI.
+- Frontend `PlayerFeatureCard` displays description under the title.
+
+Future extensions:
+- Add categories (Collaboration, Security, Performance) for event synergies.
+- Introduce rare epics (Σ 8) plus special scoring modifiers.
+
+---
+
+## End-Game Visual Polish (Win / Defeat Modal)
+
+The end-game summary modal has been upgraded for clarity, celebration, and accessibility:
+
+Enhancements:
+- Distinct visual theming for Victory vs Defeat (gradient surfaces, accent overlays).
+- Lightweight CSS confetti (respecting `prefers-reduced-motion` & custom `data-motion='off'`).
+- Animated metric cards with progress bars for Completed vs Target and Turn consumption.
+- Player performance table now highlights top performers (★) based on highest completed OR highest score (ties honored).
+- Accessible structure: ARIA labels on sections, consistent heading, semantic table headers.
+- Buttons upgraded to primary / outline styling for visual hierarchy.
+
+Tech Notes:
+- Confetti bits generated in React state (up to 42) and rely on pure CSS fall animation.
+- Reduced motion: confetti suppressed & defeat pulse simplified.
+- Added new CSS classes: `.endgame-modal`, `.endgame-metrics`, `.metric*`, `.confetti-layer`, `.players-breakdown .top-performer`.
+- No change to existing test selectors (heading text & button labels preserved) so prior tests remain valid.
+
+Potential future polish:
+- Add shareable summary export (image or markdown snapshot).
+- Add per-player efficiency stat (completed / turns taken) and average points per completion.
+- Provide quick “Play Again with Tweaked Config” flow (inline editable multiplier & turns).
 # Silosoft: Workplace Simulation Game
 
 ## Objective

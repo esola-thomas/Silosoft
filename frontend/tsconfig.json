@@ -6,7 +6,10 @@
     "jsx": "react-jsx",
     "types": ["vite/client", "node", "react", "react-dom"],
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "moduleDetection": "force"
+    "moduleDetection": "force",
+    // Frontend: allow importing .ts extensions (paired with noEmit)
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   },
   "include": ["src"],
   "exclude": ["dist", "node_modules"]
