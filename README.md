@@ -51,6 +51,8 @@ A collaborative digital card game that simulates workplace challenges in softwar
 
 ### Running the Application
 
+#### Option 1: Traditional Development Setup
+
 1. **Start the backend server**
    ```bash
    cd backend
@@ -65,8 +67,47 @@ A collaborative digital card game that simulates workplace challenges in softwar
    ```
    Application opens at `http://localhost:3000`
 
+#### Option 2: Docker Setup (Recommended for Production)
+
+**Prerequisites:**
+- Docker 20.0+ and Docker Compose 2.0+
+
+**Quick Start with Docker:**
+```bash
+# Build and start all services
+docker-compose up --build
+
+# Or run in background
+docker-compose up -d --build
+```
+
+**Individual Service Management:**
+```bash
+# Start only backend
+docker-compose up backend
+
+# Start only frontend (requires backend running)
+docker-compose up frontend
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+
+# Remove containers and images
+docker-compose down --rmi all
+```
+
+**Docker Architecture:**
+- **Backend**: Node.js Alpine container on port 3001
+- **Frontend**: Multi-stage build (Node.js + Nginx) on port 80
+- **Networking**: Internal Docker network for service communication
+- **Health Checks**: Automatic service health monitoring
+
 3. **Play the game**
-   - Open `http://localhost:3000` in your browser
+   - Docker: Open `http://localhost` in your browser
+   - Traditional: Open `http://localhost:3000` in your browser
    - Create a new game with 2-4 player names
    - Share join codes with teammates
    - Start playing cooperatively!
@@ -425,6 +466,29 @@ localStorage.clear()
 
 # Check browser console for errors
 # Enable network tab to monitor API calls
+```
+
+**Docker Issues:**
+```bash
+# Check container status
+docker-compose ps
+
+# View logs for specific service
+docker-compose logs backend
+docker-compose logs frontend
+
+# Restart specific service
+docker-compose restart backend
+
+# Rebuild containers after code changes
+docker-compose up --build
+
+# Clean up Docker resources
+docker-compose down --volumes --rmi all
+docker system prune -a
+
+# Check health status
+docker-compose exec backend wget -qO- http://localhost:3001/health
 ```
 
 **Test Failures:**
