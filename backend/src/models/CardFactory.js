@@ -12,7 +12,7 @@ class CardFactory {
 
   loadCardDefinitions() {
     try {
-      const cardsPath = path.join(__dirname, '../../../shared/schemas/cards.json');
+      const cardsPath = path.join(__dirname, '../schemas/cards.json');
       const cardsData = fs.readFileSync(cardsPath, 'utf8');
       this.cardDefinitions = JSON.parse(cardsData);
     } catch (error) {
