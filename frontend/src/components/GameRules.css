@@ -1,0 +1,686 @@
+/* GameRules Component Styles */
+
+/* Modal overlay */
+.game-rules-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 16px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal container */
+.game-rules-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-width: 900px;
+  max-height: 90vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header */
+.rules-header {
+  padding: 20px 24px;
+  border-bottom: 2px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 12px 12px 0 0;
+}
+
+.rules-title {
+  margin: 0;
+  color: #333;
+  font-size: 1.5em;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rules-title::before {
+  content: "📋";
+  font-size: 1.2em;
+}
+
+.rules-close-button {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  color: #666;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+.rules-close-button:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+/* Content area */
+.rules-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+/* Sections */
+.rules-section {
+  padding: 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.rules-section:last-child {
+  border-bottom: none;
+}
+
+.section-title {
+  margin: 0 0 16px 0;
+  color: #2196F3;
+  font-size: 1.2em;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e3f2fd;
+}
+
+.section-content {
+  color: #444;
+  line-height: 1.6;
+}
+
+/* Game Overview */
+.overview-text {
+  margin: 0 0 16px 0;
+  font-size: 1.05em;
+  background: #f0f8ff;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #2196F3;
+}
+
+.key-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.fact-item {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fact-label {
+  font-weight: 600;
+  color: #666;
+  min-width: 70px;
+}
+
+/* Setup steps */
+.setup-steps {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.setup-steps li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+/* Turn sequence */
+.turn-sequence {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.subsection-title {
+  margin: 0 0 12px 0;
+  color: #555;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.turn-steps {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.turn-steps li {
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.turn-steps ul {
+  margin: 8px 0 0 20px;
+  padding-left: 0;
+}
+
+.turn-steps ul li {
+  margin-bottom: 4px;
+  color: #666;
+  font-size: 0.95em;
+}
+
+/* Card types */
+.card-types {
+  display: grid;
+  gap: 16px;
+}
+
+.card-type {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.card-type:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-color: #2196F3;
+}
+
+.card-type-title {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 1.05em;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-type:nth-child(1) .card-type-title::before {
+  content: "🎯";
+}
+
+.card-type:nth-child(2) .card-type-title::before {
+  content: "👥";
+}
+
+.card-type:nth-child(3) .card-type-title::before {
+  content: "⚡";
+}
+
+.card-type p {
+  margin: 0 0 12px 0;
+  color: #666;
+  font-style: italic;
+}
+
+.card-type ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.card-type li {
+  margin-bottom: 6px;
+  color: #555;
+}
+
+/* Assignment rules */
+.assignment-rules {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.assignment-rules ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.assignment-rules li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.example-box {
+  background: #fff3e0;
+  border: 1px solid #ffb74d;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 16px;
+}
+
+.example-title {
+  margin: 0 0 8px 0;
+  color: #ef6c00;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.example-box p {
+  margin: 0 0 8px 0;
+  color: #555;
+  font-size: 0.95em;
+}
+
+.example-box ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.example-box li {
+  margin-bottom: 4px;
+  color: #666;
+  font-size: 0.9em;
+}
+
+/* Win/Lose conditions */
+.win-lose-conditions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.win-condition,
+.lose-condition {
+  padding: 16px;
+  border-radius: 8px;
+  border: 2px solid;
+}
+
+.win-condition {
+  background: #f1f8e9;
+  border-color: #4caf50;
+}
+
+.lose-condition {
+  background: #ffebee;
+  border-color: #f44336;
+}
+
+.condition-title {
+  margin: 0 0 8px 0;
+  font-size: 1.05em;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.win-title {
+  color: #2e7d32;
+}
+
+.win-title::before {
+  content: "🏆";
+}
+
+.lose-title {
+  color: #c62828;
+}
+
+.lose-title::before {
+  content: "❌";
+}
+
+.win-condition p,
+.lose-condition p {
+  margin: 0 0 12px 0;
+  font-weight: 500;
+}
+
+.scoring-info h5 {
+  margin: 12px 0 8px 0;
+  color: #333;
+  font-size: 0.9em;
+}
+
+.scoring-info ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.scoring-info li {
+  margin-bottom: 4px;
+  color: #555;
+  font-size: 0.9em;
+}
+
+/* Strategy tips */
+.strategy-tips {
+  display: grid;
+  gap: 16px;
+}
+
+.tip-category {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.tip-title {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 1em;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tip-category:nth-child(1) .tip-title::before {
+  content: "⚙️";
+}
+
+.tip-category:nth-child(2) .tip-title::before {
+  content: "🤝";
+}
+
+.tip-category:nth-child(3) .tip-title::before {
+  content: "🛡️";
+}
+
+.tip-category ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.tip-category li {
+  margin-bottom: 6px;
+  color: #555;
+  line-height: 1.4;
+}
+
+/* Quick reference */
+.quick-ref {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.ref-column {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.ref-title {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 0.95em;
+  font-weight: 600;
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.ref-list {
+  margin: 0;
+  padding-left: 20px;
+  list-style-type: none;
+}
+
+.ref-list li {
+  margin-bottom: 6px;
+  color: #555;
+  font-size: 0.9em;
+  position: relative;
+  padding-left: 16px;
+}
+
+.ref-list li::before {
+  content: "•";
+  color: #2196F3;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+/* Footer */
+.rules-footer {
+  padding: 20px 24px;
+  border-top: 2px solid #e0e0e0;
+  background: #f8f9fa;
+  border-radius: 0 0 12px 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.rules-close-button-footer {
+  background: #2196F3;
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rules-close-button-footer:hover {
+  background: #1976D2;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .game-rules-overlay {
+    padding: 8px;
+  }
+
+  .game-rules-modal {
+    max-height: 95vh;
+    border-radius: 8px;
+  }
+
+  .rules-header {
+    padding: 16px;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .rules-title {
+    font-size: 1.3em;
+  }
+
+  .rules-section {
+    padding: 16px;
+  }
+
+  .section-title {
+    font-size: 1.1em;
+  }
+
+  .key-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .win-lose-conditions {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-ref {
+    grid-template-columns: 1fr;
+  }
+
+  .card-types {
+    gap: 12px;
+  }
+
+  .strategy-tips {
+    gap: 12px;
+  }
+
+  .rules-footer {
+    padding: 16px;
+    border-radius: 0 0 8px 8px;
+  }
+
+  .rules-close-button-footer {
+    padding: 10px 24px;
+    font-size: 0.95em;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-rules-overlay {
+    padding: 4px;
+  }
+
+  .rules-header {
+    padding: 12px;
+  }
+
+  .rules-title {
+    font-size: 1.2em;
+  }
+
+  .rules-section {
+    padding: 12px;
+  }
+
+  .section-title {
+    font-size: 1em;
+  }
+
+  .overview-text {
+    padding: 12px;
+    font-size: 1em;
+  }
+
+  .turn-sequence,
+  .assignment-rules {
+    padding: 12px;
+  }
+
+  .card-type {
+    padding: 12px;
+  }
+
+  .win-condition,
+  .lose-condition {
+    padding: 12px;
+  }
+
+  .tip-category,
+  .ref-column {
+    padding: 12px;
+  }
+
+  .rules-footer {
+    padding: 12px;
+  }
+
+  .rules-close-button-footer {
+    width: 100%;
+    padding: 12px;
+  }
+}
+
+/* Accessibility */
+.rules-close-button:focus,
+.rules-close-button-footer:focus {
+  outline: 2px solid #2196F3;
+  outline-offset: 2px;
+}
+
+/* Custom scrollbar for webkit browsers */
+.rules-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.rules-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.rules-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.rules-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Print styles */
+@media print {
+  .game-rules-overlay {
+    position: static;
+    background: none;
+    padding: 0;
+  }
+
+  .game-rules-modal {
+    box-shadow: none;
+    max-height: none;
+    border-radius: 0;
+  }
+
+  .rules-header,
+  .rules-footer {
+    background: white;
+    border-radius: 0;
+  }
+
+  .rules-close-button,
+  .rules-close-button-footer {
+    display: none;
+  }
+
+  .rules-content {
+    overflow: visible;
+  }
+
+  .rules-section {
+    page-break-inside: avoid;
+  }
+}
