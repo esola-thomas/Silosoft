@@ -176,6 +176,56 @@ router.post('/:gameId/actions/end-turn', async (req, res) => {
   }
 });
 
+// POST /api/v1/games/:gameId/actions/trade/initiate - Initiate a trade (current player's turn)
+router.post('/:gameId/actions/trade/initiate', async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const { playerId, targetPlayerId, offeredCardId, playerToken } = req.body || {};
+
+    if (!playerId || !targetPlayerId || !offeredCardId || !playerToken) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'playerId, targetPlayerId, offeredCardId, and playerToken are required'
+      });
+    }
+
+    const card = gameEngine.initiateTrade(gameId, playerId, targetPlayerId, offeredCardId, playerToken);
+    const gameState = gameEngine.getGame(gameId);
+    res.status(200).json({
+      status: 'pending_counter',
+      offeredCardId: card.id,
+      gameState: serializeGameState(gameState, { includeDeck: true })
+    });
+  } catch (error) {
+    handleActionError(res, error);
+  }
+});
+
+// POST /api/v1/games/:gameId/actions/trade/complete - Complete a pending trade (target player acts out of turn)
+router.post('/:gameId/actions/trade/complete', async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const { playerId, counterCardId, playerToken } = req.body || {};
+
+    if (!playerId || !counterCardId || !playerToken) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'playerId, counterCardId, and playerToken are required'
+      });
+    }
+
+    const result = gameEngine.completeTrade(gameId, playerId, counterCardId, playerToken);
+    const gameState = gameEngine.getGame(gameId);
+    res.status(200).json({
+      status: 'completed',
+      ...result,
+      gameState: serializeGameState(gameState, { includeDeck: true })
+    });
+  } catch (error) {
+    handleActionError(res, error);
+  }
+});
+
 // GET /api/v1/games/:gameId/actions - Get available actions for current player (optional helper)
 router.get('/:gameId/actions', async (req, res) => {
   try {

@@ -277,6 +277,9 @@ function GameSession() {
     featuresInPlay,
     gamePhase,
     playerToken,
+    tradeState,
+    initiateTrade,
+    completeTrade,
   } = useGame();
 
   const handleDragEnd = async (result) => {
@@ -292,39 +295,62 @@ function GameSession() {
       return;
     }
 
-    if (type !== 'RESOURCE' || !destination.droppableId.startsWith('feature-')) {
+    if (type !== 'RESOURCE') {
       return;
     }
 
-    if (!source.droppableId.startsWith('hand-')) {
+    const isHandSource = source.droppableId.startsWith('hand-');
+    const isHandDest = destination.droppableId.startsWith('hand-');
+    const isFeatureDest = destination.droppableId.startsWith('feature-');
+
+    // Hand to feature assignment (existing behavior)
+    if (isHandSource && isFeatureDest) {
+      try {
+        const featureId = destination.droppableId.replace('feature-', '');
+        const resourceId = draggableId;
+        const draggedResource = myPlayer?.hand?.find((card) => card.id === resourceId);
+        const targetFeature = featuresInPlay?.find((feature) => feature.id === featureId);
+        if (!draggedResource || !targetFeature) return;
+        if (draggedResource.cardType !== 'resource') return;
+        if (targetFeature.isComplete || targetFeature.completed) return;
+        await assignResource(resourceId, featureId);
+      } catch (err) {
+        console.error('Failed to assign resource:', err);
+      }
       return;
     }
 
-    try {
-      const featureId = destination.droppableId.replace('feature-', '');
+    // Hand to hand trading logic
+    if (isHandSource && isHandDest) {
+      const sourcePlayerId = source.droppableId.replace('hand-', '');
+      const destPlayerId = destination.droppableId.replace('hand-', '');
       const resourceId = draggableId;
 
-      const draggedResource = myPlayer?.hand?.find((card) => card.id === resourceId);
-      const targetFeature = featuresInPlay?.find((feature) => feature.id === featureId);
+      // Only consider if source is my hand
+      if (myPlayer?.id !== sourcePlayerId) return;
 
-      if (!draggedResource || !targetFeature) {
-        console.warn('Invalid drag operation: resource or feature not found');
+      // Initiate trade: my card dragged onto another player's hand
+      if (destPlayerId !== sourcePlayerId && !tradeState) {
+        try {
+          await initiateTrade(destPlayerId, resourceId);
+        } catch (err) {
+          console.error('Failed to initiate trade:', err);
+        }
         return;
       }
 
-      if (draggedResource.cardType !== 'resource') {
-        console.warn('Only resource cards can be assigned to features');
+      // Complete trade: I'm the target responding with my card
+      if (tradeState &&
+          tradeState.status === 'pending_counter' &&
+          tradeState.target === myPlayer?.id &&
+          destPlayerId === tradeState.initiator) {
+        try {
+          await completeTrade(resourceId);
+        } catch (err) {
+          console.error('Failed to complete trade:', err);
+        }
         return;
       }
-
-      if (targetFeature.isComplete || targetFeature.completed) {
-        console.warn('Cannot assign resources to completed features');
-        return;
-      }
-
-      await assignResource(resourceId, featureId);
-    } catch (err) {
-      console.error('Failed to assign resource:', err);
     }
   };
 

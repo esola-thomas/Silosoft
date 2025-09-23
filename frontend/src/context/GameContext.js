@@ -105,7 +105,12 @@ const initialState = {
   currentPlayerId: null,
   playerToken: null,
   isMyTurn: false,
+<<<<<<< Updated upstream
   lastDrawnCard: null,
+=======
+  // Trade state
+  tradeState: null,
+>>>>>>> Stashed changes
 };
 
 // Action types
@@ -124,8 +129,12 @@ const ACTIONS = {
   SET_CURRENT_PLAYER: 'SET_CURRENT_PLAYER',
   SET_PLAYER_SESSION: 'SET_PLAYER_SESSION',
   CLEAR_PLAYER_SESSION: 'CLEAR_PLAYER_SESSION',
+<<<<<<< Updated upstream
   SET_LAST_DRAWN_CARD: 'SET_LAST_DRAWN_CARD',
   CLEAR_LAST_DRAWN_CARD: 'CLEAR_LAST_DRAWN_CARD',
+=======
+  SET_TRADE_STATE: 'SET_TRADE_STATE',
+>>>>>>> Stashed changes
 };
 
 // Reducer function
@@ -210,6 +219,9 @@ function gameReducer(state, action) {
         isMyTurn: state.currentPlayerId && mergedPlayers.length > 0
           ? mergedPlayers[currentPlayerIndex]?.id === state.currentPlayerId
           : false,
+        tradeState: action.payload.tradeState !== undefined
+          ? action.payload.tradeState
+          : state.tradeState,
       };
     }
 
@@ -257,6 +269,7 @@ function gameReducer(state, action) {
         isMyTurn: false,
         selectedCard: null,
         draggedCard: null,
+<<<<<<< Updated upstream
         lastDrawnCard: null,
       };
 
@@ -270,7 +283,12 @@ function gameReducer(state, action) {
       return {
         ...state,
         lastDrawnCard: null,
+=======
+        tradeState: null,
+>>>>>>> Stashed changes
       };
+    case ACTIONS.SET_TRADE_STATE:
+      return { ...state, tradeState: action.payload };
 
     default:
       return state;
@@ -407,6 +425,70 @@ export function GameProvider({ children }) {
       dispatch({ type: ACTIONS.SET_LOADING, payload: false });
     }
   }, [state.gameId, state.currentPlayerId, state.playerToken, handleError]);
+
+  // Action: Initiate trade
+  const initiateTrade = useCallback(async (targetPlayerId, offeredCardId) => {
+    if (!state.gameId || !state.currentPlayerId || !state.playerToken) {
+      handleError(new Error('Active player session is required to initiate trade'));
+      return null;
+    }
+    try {
+      const result = await apiService.initiateTrade(
+        state.gameId,
+        state.currentPlayerId,
+        targetPlayerId,
+        offeredCardId,
+        state.playerToken,
+      );
+      if (result.gameState) {
+        dispatch({ type: ACTIONS.UPDATE_GAME_STATE, payload: result.gameState });
+      }
+      if (result.gameState?.tradeState) {
+        dispatch({ type: ACTIONS.SET_TRADE_STATE, payload: result.gameState.tradeState });
+      }
+      return result;
+    } catch (error) {
+      handleError(error);
+      return null;
+    }
+  }, [state.gameId, state.currentPlayerId, state.playerToken, handleError]);
+
+  // Action: Complete trade
+  const completeTrade = useCallback(async (counterCardId) => {
+    if (!state.gameId || !state.currentPlayerId || !state.playerToken) {
+      handleError(new Error('Active player session is required to complete trade'));
+      return null;
+    }
+    try {
+      const result = await apiService.completeTrade(
+        state.gameId,
+        state.currentPlayerId,
+        counterCardId,
+        state.playerToken,
+      );
+      if (result.gameState) {
+        dispatch({ type: ACTIONS.UPDATE_GAME_STATE, payload: result.gameState });
+      }
+      if (result.gameState?.tradeState) {
+        dispatch({ type: ACTIONS.SET_TRADE_STATE, payload: result.gameState.tradeState });
+      }
+      return result;
+    } catch (error) {
+      handleError(error);
+      return null;
+    }
+  }, [state.gameId, state.currentPlayerId, state.playerToken, handleError]);
+
+  // Effect: When trade completes, schedule auto-clear after short delay so initiator regains clean UI
+  useEffect(() => {
+    if (state.tradeState && state.tradeState.status === 'completed') {
+      const timeout = setTimeout(() => {
+        dispatch({ type: ACTIONS.SET_TRADE_STATE, payload: null });
+      }, 3000); // 3s visibility window
+      return () => clearTimeout(timeout);
+    }
+    return undefined;
+  }, [state.tradeState]);
 
   // Action: Assign resource to feature
   const assignResource = useCallback(async (resourceId, featureId) => {
@@ -614,14 +696,23 @@ export function GameProvider({ children }) {
       return undefined;
     }
 
+    // We poll in these scenarios:
+    // 1. Lobby phase (waiting for players)
+    // 2. Playing phase when it's NOT my turn (to stay updated)
+    // 3. Playing phase when a trade is pending counter (initiator waiting for target)
+    const tradePending = state.tradeState && state.tradeState.status === 'pending_counter';
     const shouldPoll = state.gamePhase === 'lobby'
-      || (state.gamePhase === 'playing' && (!state.isMyTurn || !state.playerToken));
+      || (state.gamePhase === 'playing' && (!state.isMyTurn || !state.playerToken))
+      || (state.gamePhase === 'playing' && tradePending);
 
     if (!shouldPoll) {
       return undefined;
     }
 
-    const pollInterval = state.gamePhase === 'lobby' ? 3000 : 5000;
+    // Faster refresh while trade awaiting counter; otherwise existing intervals
+    const pollInterval = tradePending
+      ? 1500
+      : (state.gamePhase === 'lobby' ? 3000 : 5000);
 
     const intervalId = setInterval(async () => {
       try {
@@ -633,7 +724,7 @@ export function GameProvider({ children }) {
     }, pollInterval);
 
     return () => clearInterval(intervalId);
-  }, [state.gameId, state.gamePhase, state.isMyTurn, state.playerToken, state.loading]);
+  }, [state.gameId, state.gamePhase, state.isMyTurn, state.playerToken, state.loading, state.tradeState]);
 
   // Derived state
   const currentPlayer = state.players[state.currentPlayerIndex] || null;
@@ -669,6 +760,9 @@ export function GameProvider({ children }) {
     setSelectedCard,
     setDraggedCard,
     clearError,
+    initiateTrade,
+    completeTrade,
+    tradeState: state.tradeState,
   };
 
   return (

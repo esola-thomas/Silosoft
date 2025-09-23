@@ -17,6 +17,7 @@ const Card = memo(({
   onClick,
   showDetails = true,
   size = 'normal', // normal, small, large
+  extraClassName,
 }) => {
   const { selectedCard, setSelectedCard } = useGame();
 
@@ -179,6 +180,7 @@ const Card = memo(({
     isAssigned && 'card-assigned',
     isDraggable && !isUnavailable && 'card-draggable',
     card.completed && 'card-completed',
+    extraClassName,
   ].filter(Boolean).join(' ');
 
   // Card content

@@ -312,3 +312,61 @@
 .card:focus:not(:focus-visible) {
   outline: none;
 }
+
+/* Trade offered state */
+.card-trade-offered {
+  position: relative;
+  opacity: 0.55;
+  border-style: dashed;
+  border-color: #ff9800 !important;
+  background: repeating-linear-gradient(
+    45deg,
+    #fff8e1,
+    #fff8e1 8px,
+    #ffe0b2 8px,
+    #ffe0b2 16px
+  );
+}
+
+.card-trade-offered::after {
+  content: 'OFFERED';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: #ff9800;
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 2px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  pointer-events: none;
+}
+
+/* Trade completed visual pulse */
+@keyframes tradePulse {
+  0% { box-shadow: 0 0 0 0 rgba(76,175,80,0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(76,175,80,0); }
+  100% { box-shadow: 0 0 0 0 rgba(76,175,80,0); }
+}
+
+.card-trade-received {
+  animation: tradePulse 1.6s ease-out 2;
+  position: relative;
+}
+
+.card-trade-received::after {
+  content: 'NEW';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #4caf50;
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 2px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+}

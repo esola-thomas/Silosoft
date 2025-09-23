@@ -33,7 +33,11 @@ const GameBoard = memo(() => {
     clearError,
     joinGame,
     leaveGameSession,
+<<<<<<< Updated upstream
     acknowledgeLastDrawnCard,
+=======
+    tradeState,
+>>>>>>> Stashed changes
   } = useGame();
 
   const [showAllHands, setShowAllHands] = useState(false);
@@ -408,10 +412,27 @@ const GameBoard = memo(() => {
                 >
                   {player.hand && player.hand.length > 0 ? (
                     player.hand.map((card, index) => {
-                      const isDraggableCondition = isMyTurn &&
-                        myPlayer?.id === player.id &&
-                        card.cardType === 'resource' &&
-                        !card.unavailableUntil;
+                      let isDraggableCondition = false;
+                      const isMyHand = myPlayer?.id === player.id;
+                      const pendingTrade = tradeState && tradeState.status === 'pending_counter';
+                      const iAmInitiator = pendingTrade && tradeState.initiator === myPlayer?.id;
+                      const iAmTarget = pendingTrade && tradeState.target === myPlayer?.id;
+                      const cardIsOffered = pendingTrade && tradeState.offeredCardId === card.id;
+
+                      // Normal turn-based drag for assignment
+                      if (isMyTurn && isMyHand && card.cardType === 'resource' && !card.unavailableUntil) {
+                        isDraggableCondition = true;
+                      }
+
+                      // Allow target player to drag a resource to complete trade (out of turn)
+                      if (!isMyTurn && iAmTarget && isMyHand && pendingTrade && card.cardType === 'resource' && !card.unavailableUntil) {
+                        isDraggableCondition = true;
+                      }
+
+                      // Offered card should not be draggable after offering
+                      if (cardIsOffered) {
+                        isDraggableCondition = false;
+                      }
 
                       return (
                         <Card
@@ -422,6 +443,8 @@ const GameBoard = memo(() => {
                           isInHand={true}
                           isUnavailable={!!card.unavailableUntil}
                           size="normal"
+                          // Mark offered card visually
+                          extraClassName={cardIsOffered ? 'card-trade-offered' : undefined}
                         />
                       );
                     })
@@ -508,6 +531,19 @@ const GameBoard = memo(() => {
       {renderGameHeader()}
 
       <div className="game-content">
+        {tradeState && (
+          <div className={`trade-banner trade-status-${tradeState.status}`}>
+            {tradeState.status === 'pending_counter' && tradeState.target === myPlayer?.id && (
+              <span>Trade offer received: opponent offered a card. Drag one of your cards onto their hand to complete.</span>
+            )}
+            {tradeState.status === 'pending_counter' && tradeState.initiator === myPlayer?.id && (
+              <span>Trade initiated. Waiting for other player to respond.</span>
+            )}
+            {tradeState.status === 'completed' && (
+              <span>Trade completed this turn.</span>
+            )}
+          </div>
+        )}
         {/* Left column: Scoreboard and controls */}
         <div className="game-sidebar">
           {renderSpectatorNotice()}
