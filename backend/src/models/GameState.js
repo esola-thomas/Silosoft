@@ -19,6 +19,9 @@ class GameState {
     this.createdAt = new Date().toISOString();
     this.lastAction = null;
     this.maxRounds = 10;
+  // Trade mechanics
+  this.tradeState = null; // { initiator, target, offeredCardId, counterCardId?, status, startedAt, completedAt }
+  this.currentTurnTradeCompleted = false; // true once a trade (init+complete) has happened this turn
 
     // Initialize players
     const assignedCodes = new Set();
@@ -285,6 +288,10 @@ class GameState {
 
     this.advanceToNextPlayer();
 
+  // Reset trade context for next player's turn
+  this.tradeState = null;
+  this.currentTurnTradeCompleted = false;
+
     this.lastAction = {
       type: 'end_turn',
       playerId: playerId,
@@ -367,7 +374,9 @@ class GameState {
       winCondition: this.winCondition,
       createdAt: this.createdAt,
       lastAction: this.lastAction,
-      maxRounds: this.maxRounds
+      maxRounds: this.maxRounds,
+      tradeState: this.tradeState,
+      currentTurnTradeCompleted: this.currentTurnTradeCompleted
     };
   }
 
@@ -381,6 +390,13 @@ class GameState {
 
     if (!Array.isArray(gameState.featureBacklog)) {
       gameState.featureBacklog = [];
+    }
+
+    if (gameState.tradeState === undefined) {
+      gameState.tradeState = null;
+    }
+    if (gameState.currentTurnTradeCompleted === undefined) {
+      gameState.currentTurnTradeCompleted = false;
     }
 
     return gameState;

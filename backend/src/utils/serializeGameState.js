@@ -73,6 +73,8 @@ const serializeGameState = (gameState, {
     isGameOver: typeof gameState.isGameOver === 'function'
       ? gameState.isGameOver()
       : Boolean(gameState.winCondition || (gameState.gamePhase === 'ended')),
+    tradeState: gameState.tradeState ? { ...gameState.tradeState } : null,
+    currentTurnTradeCompleted: Boolean(gameState.currentTurnTradeCompleted),
   };
 
   if (includeDeck) {

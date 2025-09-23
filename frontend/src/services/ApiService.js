@@ -151,6 +151,31 @@ class ApiService {
     return response.data;
   }
 
+  async initiateTrade(gameId, playerId, targetPlayerId, offeredCardId, playerToken) {
+    if (!gameId || !playerId || !targetPlayerId || !offeredCardId || !playerToken) {
+      throw new Error('All parameters are required to initiate trade');
+    }
+    const response = await this.apiClient.post(`/games/${gameId}/actions/trade/initiate`, {
+      playerId,
+      targetPlayerId,
+      offeredCardId,
+      playerToken,
+    });
+    return response.data;
+  }
+
+  async completeTrade(gameId, playerId, counterCardId, playerToken) {
+    if (!gameId || !playerId || !counterCardId || !playerToken) {
+      throw new Error('All parameters are required to complete trade');
+    }
+    const response = await this.apiClient.post(`/games/${gameId}/actions/trade/complete`, {
+      playerId,
+      counterCardId,
+      playerToken,
+    });
+    return response.data;
+  }
+
   async joinGame(gameId, { joinCode, playerId, playerToken, includeJoinCodes = false } = {}) {
     if (!gameId) {
       throw new Error('Game ID is required to join');

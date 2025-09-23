@@ -223,6 +223,10 @@ class GameEngine {
       throw new Error('Resource card not found in player hand');
     }
 
+    if (resourceCard._tradeLocked) {
+      throw new Error('Card is locked in a pending trade');
+    }
+
     if (resourceCard.role === undefined) {
       throw new Error(`Card ${resourceId} is not a resource card`);
     }
@@ -261,6 +265,100 @@ class GameEngine {
     }
 
     return wasCompleted;
+  }
+
+  /* Trade Mechanics */
+  initiateTrade(gameId, playerId, targetPlayerId, offeredCardId, playerToken) {
+    const gameState = this.getGame(gameId);
+    const player = this.validatePlayerSession(gameState, playerId, playerToken);
+    this.ensureGameActive(gameState, playerToken);
+
+    if (gameState.isGameOver()) throw new Error('Game is over');
+    if (gameState.getCurrentPlayer().id !== playerId) throw new Error('Not your turn');
+    if (gameState.currentTurnTradeCompleted) throw new Error('Trade already completed this turn');
+    if (gameState.tradeState) throw new Error('Trade already pending');
+
+    const targetPlayer = gameState.getPlayerById(targetPlayerId);
+    if (!targetPlayer) throw new Error('Target player not found');
+    if (targetPlayer.id === player.id) throw new Error('Cannot trade with self');
+
+    const offeredCard = player.hand.find(c => c.id === offeredCardId);
+    if (!offeredCard) throw new Error('Offered card not in player hand');
+    if (offeredCard.assignedTo) throw new Error('Cannot trade assigned card');
+    if (offeredCard.unavailableUntil) throw new Error('Cannot trade unavailable card');
+
+    offeredCard._tradeLocked = true;
+
+    gameState.tradeState = {
+      initiator: player.id,
+      target: targetPlayer.id,
+      offeredCardId,
+      status: 'pending_counter',
+      startedAt: new Date().toISOString()
+    };
+
+    gameState.lastAction = {
+      type: 'trade_initiated',
+      initiator: player.id,
+      target: targetPlayer.id,
+      offeredCardId,
+      timestamp: new Date().toISOString()
+    };
+
+    return offeredCard;
+  }
+
+  completeTrade(gameId, playerId, counterCardId, playerToken) {
+    const gameState = this.getGame(gameId);
+    const player = this.validatePlayerSession(gameState, playerId, playerToken);
+    this.ensureGameActive(gameState, playerToken);
+
+    if (!gameState.tradeState) throw new Error('No trade pending');
+    const ts = gameState.tradeState;
+    if (ts.status !== 'pending_counter') throw new Error('Trade not awaiting counter');
+    if (player.id !== ts.target) throw new Error('Only target player may complete trade');
+    if (gameState.currentTurnTradeCompleted) throw new Error('Trade already completed this turn');
+
+    const initiator = gameState.getPlayerById(ts.initiator);
+    if (!initiator) throw new Error('Initiator not found');
+
+    const offeredCardIndex = initiator.hand.findIndex(c => c.id === ts.offeredCardId);
+    if (offeredCardIndex === -1) throw new Error('Offered card missing');
+
+    const counterCardIndex = player.hand.findIndex(c => c.id === counterCardId);
+    if (counterCardIndex === -1) throw new Error('Counter card not found');
+    const offeredCard = initiator.hand[offeredCardIndex];
+    const counterCard = player.hand[counterCardIndex];
+
+    if (counterCard.assignedTo) throw new Error('Cannot trade assigned card');
+    if (counterCard.unavailableUntil) throw new Error('Cannot trade unavailable card');
+    if (counterCard._tradeLocked) throw new Error('Card already locked');
+
+    // Execute swap
+    offeredCard._tradeLocked = false;
+    initiator.hand.splice(offeredCardIndex, 1);
+    player.hand.splice(counterCardIndex, 1);
+    initiator.hand.push(counterCard);
+    player.hand.push(offeredCard);
+
+    gameState.tradeState = {
+      ...gameState.tradeState,
+      counterCardId,
+      status: 'completed',
+      completedAt: new Date().toISOString()
+    };
+    gameState.currentTurnTradeCompleted = true;
+
+    gameState.lastAction = {
+      type: 'trade_completed',
+      initiator: initiator.id,
+      target: player.id,
+      offeredCardId: offeredCard.id,
+      counterCardId: counterCard.id,
+      timestamp: new Date().toISOString()
+    };
+
+    return { offeredCardId: offeredCard.id, counterCardId: counterCard.id };
   }
 
   endTurn(gameId, playerId, playerToken) {

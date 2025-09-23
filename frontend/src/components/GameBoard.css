@@ -907,3 +907,51 @@
   border-radius: 4px;
   font-family: 'Courier New', Courier, monospace;
 }
+
+/* Trade banner */
+.trade-banner {
+  grid-column: 1 / -1;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.9em;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  animation: slideDown 0.3s ease;
+}
+
+.trade-status-pending_counter.trade-banner {
+  background: #fff3e0;
+  border: 1px solid #ffb74d;
+  color: #e65100;
+}
+
+.trade-status-completed.trade-banner {
+  background: #e8f5e9;
+  border: 1px solid #81c784;
+  color: #1b5e20;
+}
+
+.trade-banner::before {
+  content: '🤝';
+  font-size: 1.2em;
+}
+
+.trade-banner button {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8em;
+  color: #555;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.trade-banner button:hover {
+  background: rgba(0,0,0,0.06);
+}
