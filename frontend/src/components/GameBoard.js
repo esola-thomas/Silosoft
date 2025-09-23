@@ -26,17 +26,21 @@ const GameBoard = memo(() => {
     error,
     playerToken,
     currentPlayerId,
+    lastDrawnCard,
     // Actions
     drawCard,
     endTurn,
     clearError,
     joinGame,
     leaveGameSession,
+    acknowledgeLastDrawnCard,
   } = useGame();
 
   const [showAllHands, setShowAllHands] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [showRules, setShowRules] = useState(false);
+  const [drawModalOpen, setDrawModalOpen] = useState(false);
+  const [latestDraw, setLatestDraw] = useState(null);
 
   // Auto-select current player when it changes
   React.useEffect(() => {
@@ -46,6 +50,18 @@ const GameBoard = memo(() => {
       setSelectedPlayer(players[0].id);
     }
   }, [myPlayer, selectedPlayer, players]);
+
+  React.useEffect(() => {
+    if (lastDrawnCard?.card) {
+      setLatestDraw(lastDrawnCard.card);
+      setDrawModalOpen(true);
+    }
+  }, [lastDrawnCard]);
+
+  const closeDrawModal = React.useCallback(() => {
+    setDrawModalOpen(false);
+    acknowledgeLastDrawnCard();
+  }, [acknowledgeLastDrawnCard]);
 
 
   // Handle draw card action
@@ -261,6 +277,103 @@ const GameBoard = memo(() => {
     );
   };
 
+  const renderRequirementsList = (requirements = {}) => {
+    const items = Object.entries(requirements)
+      .filter(([, value]) => value && value > 0)
+      .map(([role, value]) => (
+        <li key={role}>
+          <span className={`req-badge req-${role}`}>{role.toUpperCase()}</span> {value}
+        </li>
+      ));
+
+    if (items.length === 0) {
+      return <li>No specific requirements</li>;
+    }
+
+    return items;
+  };
+
+  const renderEventEffectList = (effect = {}) => {
+    return Object.entries(effect).map(([key, value]) => (
+      <li key={key}>
+        <span className="effect-key">{key}</span>: <span className="effect-value">{String(value)}</span>
+      </li>
+    ));
+  };
+
+  const renderDrawModal = () => {
+    if (!drawModalOpen || !latestDraw) {
+      return null;
+    }
+
+    const card = latestDraw;
+    const cardTypeLabel = (card.cardType || card.type || 'card').toUpperCase();
+
+    return (
+      <div className="draw-modal-overlay" role="dialog" aria-modal="true" aria-label="Card drawn">
+        <div className={`draw-modal draw-type-${card.cardType || card.type || 'unknown'}`}>
+          <div className="draw-modal-header">
+            <div>
+              <span className="draw-modal-label">Card Drawn</span>
+              <h3 className="draw-modal-title">{card.name || card.role || card.id}</h3>
+              <span className="draw-modal-type">{cardTypeLabel}</span>
+            </div>
+            <button className="draw-modal-close" onClick={closeDrawModal} aria-label="Close card details">
+              ✕
+            </button>
+          </div>
+
+          <div className="draw-modal-content">
+            {card.cardType === 'feature' && (
+              <>
+                <p className="draw-modal-subtext">Worth {card.points} points</p>
+                {card.description && <p className="draw-modal-description">{card.description}</p>}
+                <h4>Requirements</h4>
+                <ul className="draw-modal-list">
+                  {renderRequirementsList(card.requirements)}
+                </ul>
+              </>
+            )}
+
+            {card.cardType === 'resource' && (
+              <>
+                <p className="draw-modal-subtext">
+                  {card.role?.toUpperCase()} &bull; {card.level?.toUpperCase()} &bull; Value {card.value}
+                </p>
+                {card.unavailableUntil && (
+                  <p className="draw-modal-warning">Unavailable until round {card.unavailableUntil}</p>
+                )}
+              </>
+            )}
+
+            {card.cardType === 'event' && (
+              <>
+                {card.description && <p className="draw-modal-description">{card.description}</p>}
+                <h4>Effect</h4>
+                <ul className="draw-modal-list">
+                  {renderEventEffectList(card.effect)}
+                </ul>
+                <p className="draw-modal-info">This event resolves immediately.</p>
+              </>
+            )}
+
+            {!['feature', 'resource', 'event'].includes(card.cardType) && (
+              <p className="draw-modal-description">
+                {card.description || 'This card has been added to your hand.'}
+              </p>
+            )}
+          </div>
+
+          <div className="draw-modal-actions">
+            <button className="draw-modal-close-button" onClick={closeDrawModal}>
+              Got it
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Render player hands
   const renderPlayerHands = () => {
     const displayedPlayers = getDisplayedPlayerHand();
@@ -422,6 +535,8 @@ const GameBoard = memo(() => {
         isOpen={showRules}
         onClose={() => setShowRules(false)}
       />
+
+      {renderDrawModal()}
     </div>
   );
 });

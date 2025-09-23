@@ -24,7 +24,7 @@ const FeatureDisplay = memo(({
 
       // Calculate assigned values by role
       const assignedByRole = assigned.reduce((acc, resource) => {
-        acc[resource.role] = (acc[resource.role] || 0) + resource.value;
+        acc[resource.role] = (acc[resource.role] || 0) + 1;
         return acc;
       }, {});
 

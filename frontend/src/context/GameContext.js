@@ -105,6 +105,7 @@ const initialState = {
   currentPlayerId: null,
   playerToken: null,
   isMyTurn: false,
+  lastDrawnCard: null,
 };
 
 // Action types
@@ -123,6 +124,8 @@ const ACTIONS = {
   SET_CURRENT_PLAYER: 'SET_CURRENT_PLAYER',
   SET_PLAYER_SESSION: 'SET_PLAYER_SESSION',
   CLEAR_PLAYER_SESSION: 'CLEAR_PLAYER_SESSION',
+  SET_LAST_DRAWN_CARD: 'SET_LAST_DRAWN_CARD',
+  CLEAR_LAST_DRAWN_CARD: 'CLEAR_LAST_DRAWN_CARD',
 };
 
 // Reducer function
@@ -254,6 +257,19 @@ function gameReducer(state, action) {
         isMyTurn: false,
         selectedCard: null,
         draggedCard: null,
+        lastDrawnCard: null,
+      };
+
+    case ACTIONS.SET_LAST_DRAWN_CARD:
+      return {
+        ...state,
+        lastDrawnCard: action.payload,
+      };
+
+    case ACTIONS.CLEAR_LAST_DRAWN_CARD:
+      return {
+        ...state,
+        lastDrawnCard: null,
       };
 
     default:
@@ -371,6 +387,16 @@ export function GameProvider({ children }) {
       // Update game state with the response
       if (result.gameState) {
         dispatch({ type: ACTIONS.UPDATE_GAME_STATE, payload: result.gameState });
+      }
+
+      if (result?.card) {
+        dispatch({
+          type: ACTIONS.SET_LAST_DRAWN_CARD,
+          payload: {
+            card: result.card,
+            receivedAt: Date.now(),
+          },
+        });
       }
 
       return result;
@@ -556,6 +582,10 @@ export function GameProvider({ children }) {
     dispatch({ type: ACTIONS.CLEAR_PLAYER_SESSION });
   }, [state.gameId]);
 
+  const acknowledgeLastDrawnCard = useCallback(() => {
+    dispatch({ type: ACTIONS.CLEAR_LAST_DRAWN_CARD });
+  }, []);
+
   // Action: Reset game
   const resetGame = useCallback(() => {
     dispatch({ type: ACTIONS.RESET_GAME });
@@ -621,6 +651,7 @@ export function GameProvider({ children }) {
     deckSize,
     isGameActive,
     isGameEnded,
+    lastDrawnCard: state.lastDrawnCard,
 
     // Actions
     createGame,
@@ -632,6 +663,7 @@ export function GameProvider({ children }) {
     setPlayerReadyStatus,
     startGame: startGameSession,
     leaveGameSession,
+    acknowledgeLastDrawnCard,
     resetGame,
     setCurrentPlayer,
     setSelectedCard,

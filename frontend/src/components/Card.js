@@ -34,7 +34,7 @@ const Card = memo(({
     index,
     hasUnavailableUntil: !!card.unavailableUntil,
     unavailableUntil: card.unavailableUntil,
-    willWrapWithDraggable: isDraggable && !isUnavailable && index !== undefined
+    willWrapWithDraggable: isDraggable && !isUnavailable && index !== undefined,
   });
 
   const isSelected = selectedCard && selectedCard.id === card.id;

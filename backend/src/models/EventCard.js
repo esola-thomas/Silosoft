@@ -5,6 +5,9 @@ class EventCard {
       description = name;
     }
 
+    const defaultEffect = EventCard.getDefaultEffect(type) || {};
+    effect = effect ? { ...defaultEffect, ...effect } : { ...defaultEffect };
+
     if (!id || !type || !effect) {
       throw new Error('EventCard must have id, type, and effect');
     }
@@ -21,7 +24,12 @@ class EventCard {
   }
 
   static validate(cardData) {
-    if (!cardData.id || !cardData.type || !cardData.effect) {
+    const defaultEffect = EventCard.getDefaultEffect(cardData.type) || {};
+    const normalizedEffect = cardData.effect
+      ? { ...defaultEffect, ...cardData.effect }
+      : { ...defaultEffect };
+
+    if (!cardData.id || !cardData.type || !normalizedEffect) {
       throw new Error('EventCard must have id, type, and effect');
     }
 
@@ -32,9 +40,30 @@ class EventCard {
     }
 
     // Validate effect structure based on type
-    EventCard.validateEffectForType(cardData.type, cardData.effect);
+    EventCard.validateEffectForType(cardData.type, normalizedEffect);
+    cardData.effect = normalizedEffect;
 
     return true;
+  }
+
+  static getDefaultEffect(type) {
+    switch (type) {
+      case 'layoff':
+        return { action: 'random_discard', count: 1 };
+      case 'pto':
+      case 'plm':
+        return { action: 'resource_lock', count: 1, duration: 1 };
+      case 'competition':
+        return { action: 'deadline_pressure', rounds: 1, failurePenalty: -1, successBonus: 0 };
+      case 'contractor':
+        return { action: 'add_wildcard', role: 'dev', level: 'senior', duration: 2 };
+      case 'bonus':
+        return { action: 'draw_resources', count: 1 };
+      case 'reorg':
+        return { action: 'reassign_resources' };
+      default:
+        return null;
+    }
   }
 
   static validateEffectForType(type, effect) {

@@ -104,20 +104,20 @@ class FeatureCard {
   }
 
   checkCompletion() {
-    const assigned = {
+    const assignedCounts = {
       dev: 0,
       pm: 0,
-      ux: 0
+      ux: 0,
     };
 
-    this.assignedResources.forEach(resource => {
-      assigned[resource.role] += resource.value;
+    this.assignedResources.forEach((resource) => {
+      assignedCounts[resource.role] += 1;
     });
 
     const isComplete =
-      assigned.dev >= (this.requirements?.dev || 0) &&
-      assigned.pm >= (this.requirements?.pm || 0) &&
-      assigned.ux >= (this.requirements?.ux || 0);
+      assignedCounts.dev >= (this.requirements?.dev || 0) &&
+      assignedCounts.pm >= (this.requirements?.pm || 0) &&
+      assignedCounts.ux >= (this.requirements?.ux || 0);
 
     if (isComplete && !this.completed) {
       this.completed = true;
@@ -128,9 +128,7 @@ class FeatureCard {
   }
 
   getAssignedValue(role) {
-    return this.assignedResources
-      .filter(resource => resource.role === role)
-      .reduce((sum, resource) => sum + resource.value, 0);
+    return this.assignedResources.filter(resource => resource.role === role).length;
   }
 
   getRemainingRequirements() {

@@ -107,98 +107,98 @@ function GameSetup() {
 
         <div className="setup-grid">
           <div className="setup-card">
-          <h2>Setup New Game</h2>
-          <p className="setup-description">
-            Create a new cooperative card game session. Work together to complete all features before time runs out!
-          </p>
+            <h2>Setup New Game</h2>
+            <p className="setup-description">
+              Create a new cooperative card game session. Work together to complete all features before time runs out!
+            </p>
 
-          <div className="players-section">
-            <h3>Players ({playerNames.length}/4)</h3>
+            <div className="players-section">
+              <h3>Players ({playerNames.length}/4)</h3>
 
-            {playerNames.map((name, index) => (
-              <div key={index} className="player-input-group">
-                <label htmlFor={`player-${index}`}>
-                  Player {index + 1}:
-                </label>
-                <div className="input-with-action">
-                  <input
-                    id={`player-${index}`}
-                    type="text"
-                    value={name}
-                    onChange={(e) => updatePlayerName(index, e.target.value)}
-                    placeholder={`Enter player ${index + 1} name`}
-                    maxLength={20}
-                    className={errors.some((err) => err.includes(`Player ${index + 1}`)) ? 'error' : ''}
-                  />
-                  {playerNames.length > 2 && (
-                    <button
-                      type="button"
-                      onClick={() => removePlayer(index)}
-                      className="btn-remove-player"
-                      title={`Remove player ${index + 1}`}
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {playerNames.length < 4 && (
-              <button
-                type="button"
-                onClick={addPlayer}
-                className="btn-add-player"
-              >
-                ➕ Add Player
-              </button>
-            )}
-          </div>
-
-          {errors.length > 0 && (
-            <div className="error-list">
-              {errors.map((error, index) => (
-                <div key={index} className="error-message">
-                  ⚠️ {error}
+              {playerNames.map((name, index) => (
+                <div key={index} className="player-input-group">
+                  <label htmlFor={`player-${index}`}>
+                    Player {index + 1}:
+                  </label>
+                  <div className="input-with-action">
+                    <input
+                      id={`player-${index}`}
+                      type="text"
+                      value={name}
+                      onChange={(e) => updatePlayerName(index, e.target.value)}
+                      placeholder={`Enter player ${index + 1} name`}
+                      maxLength={20}
+                      className={errors.some((err) => err.includes(`Player ${index + 1}`)) ? 'error' : ''}
+                    />
+                    {playerNames.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => removePlayer(index)}
+                        className="btn-remove-player"
+                        title={`Remove player ${index + 1}`}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
-            </div>
-          )}
 
-          {error && (
-            <div className="error-message">
-              ❌ {error}
-            </div>
-          )}
-
-          <div className="setup-actions">
-            <button
-              onClick={validateAndCreateGame}
-              disabled={loading || playerNames.length < 2}
-              className="btn-create-game"
-            >
-              {loading ? (
-                <>
-                  <span className="spinner">⏳</span>
-                  Creating Game...
-                </>
-              ) : (
-                'Start Game'
+              {playerNames.length < 4 && (
+                <button
+                  type="button"
+                  onClick={addPlayer}
+                  className="btn-add-player"
+                >
+                  ➕ Add Player
+                </button>
               )}
-            </button>
-          </div>
+            </div>
 
-          <div className="game-info">
-            <h4>Game Rules:</h4>
-            <ul>
-              <li>🎯 <strong>Goal:</strong> Complete all features within 10 rounds</li>
-              <li>🃏 <strong>Turns:</strong> Draw cards and assign resources to features</li>
-              <li>⚡ <strong>HR Events:</strong> Watch out for disruptions!</li>
-              <li>🏆 <strong>Scoring:</strong> Earn points by completing features (3, 5, or 8 points)</li>
-              <li>🤝 <strong>Cooperation:</strong> Work together to manage resources efficiently</li>
-            </ul>
+            {errors.length > 0 && (
+              <div className="error-list">
+                {errors.map((error, index) => (
+                  <div key={index} className="error-message">
+                    ⚠️ {error}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {error && (
+              <div className="error-message">
+                ❌ {error}
+              </div>
+            )}
+
+            <div className="setup-actions">
+              <button
+                onClick={validateAndCreateGame}
+                disabled={loading || playerNames.length < 2}
+                className="btn-create-game"
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner">⏳</span>
+                    Creating Game...
+                  </>
+                ) : (
+                  'Start Game'
+                )}
+              </button>
+            </div>
+
+            <div className="game-info">
+              <h4>Game Rules:</h4>
+              <ul>
+                <li>🎯 <strong>Goal:</strong> Complete all features within 10 rounds</li>
+                <li>🃏 <strong>Turns:</strong> Draw cards and assign resources to features</li>
+                <li>⚡ <strong>HR Events:</strong> Watch out for disruptions!</li>
+                <li>🏆 <strong>Scoring:</strong> Earn points by completing features (3, 5, or 8 points)</li>
+                <li>🤝 <strong>Cooperation:</strong> Work together to manage resources efficiently</li>
+              </ul>
+            </div>
           </div>
-        </div>
 
           <div className="join-card">
             <h2>Join Existing Game</h2>

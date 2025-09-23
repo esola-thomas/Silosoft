@@ -103,10 +103,16 @@ class GameState {
     // Restore temporarily unavailable resources
     this.players.forEach(player => {
       player.temporarilyUnavailable = player.temporarilyUnavailable.filter(resource => {
-        if (resource.unavailableUntil <= this.currentRound) {
+        if (resource.contractorExpiresAt !== null && resource.contractorExpiresAt <= this.currentRound) {
+          player.hand = player.hand.filter(card => card.id !== resource.id);
+          return false;
+        }
+
+        if (resource.unavailableUntil !== null && resource.unavailableUntil <= this.currentRound) {
           resource.unavailableUntil = null;
           return false;
         }
+
         return true;
       });
     });
@@ -216,11 +222,11 @@ class GameState {
   }
 
   checkFeatureCompletion(featureCard) {
-    const assigned = { dev: 0, pm: 0, ux: 0 };
+    const assignedCounts = { dev: 0, pm: 0, ux: 0 };
 
     if (featureCard.assignedResources) {
       featureCard.assignedResources.forEach(resource => {
-        assigned[resource.role] += resource.value;
+        assignedCounts[resource.role] += 1;
       });
     }
 
@@ -229,9 +235,9 @@ class GameState {
     const requiredUx = featureCard.requirements?.ux || 0;
 
     const isComplete =
-      assigned.dev >= requiredDev &&
-      assigned.pm >= requiredPm &&
-      assigned.ux >= requiredUx;
+      assignedCounts.dev >= requiredDev &&
+      assignedCounts.pm >= requiredPm &&
+      assignedCounts.ux >= requiredUx;
 
     if (isComplete && !featureCard.completed) {
       featureCard.completed = true;

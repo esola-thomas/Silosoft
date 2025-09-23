@@ -450,13 +450,27 @@ class GameEngine {
   }
 
   processCompetitionEvent(gameState, eventCard) {
+    if (eventCard.effect.action === 'deadline_pressure') {
+      gameState.featuresInPlay.forEach(feature => {
+        if (!feature.completed) {
+          feature.deadline = gameState.currentRound + (eventCard.effect.rounds || 1);
+          feature.deadlinePenalty = eventCard.effect.failurePenalty;
+          feature.deadlineBonus = eventCard.effect.successBonus || 0;
+        }
+      });
+      return;
+    }
+
     gameState.featuresInPlay.forEach(feature => {
       if (!feature.completed) {
         const role = eventCard.effect.role || 'dev';
         const additional = eventCard.effect.additional || 1;
 
-        const currentValue = feature.requirements[role] || 0;
-        feature.requirements[role] = currentValue + additional;
+        const currentValue = feature.requirements?.[role] || 0;
+        feature.requirements = {
+          ...feature.requirements,
+          [role]: currentValue + additional,
+        };
       }
     });
   }
@@ -516,11 +530,9 @@ class GameEngine {
     contractorCard.contractorExpiresAt = gameState.currentRound + duration;
     contractorCard.ownerId = player.id;
 
-    if (player.hand.length < 7) {
-      player.hand.push(contractorCard);
-      if (!player.temporarilyUnavailable.includes(contractorCard)) {
-        player.temporarilyUnavailable.push(contractorCard);
-      }
+    player.hand.push(contractorCard);
+    if (!player.temporarilyUnavailable.includes(contractorCard)) {
+      player.temporarilyUnavailable.push(contractorCard);
     }
   }
 
